@@ -1,4 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+//using API.Models;
+ 
+
 
 namespace StringCompressor
 {
@@ -6,7 +11,22 @@ namespace StringCompressor
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            try
+            {
+                Console.WriteLine("Escribe el string a comprimir");
+                string code = Console.ReadLine();
+                Console.WriteLine("Se ha guardado el string con éxito para comprimir");
+                //bool.HasMoreValues = true;
+                //
+            }
+            catch 
+            {
+                Console.WriteLine("Por favor ingrese un string válido.");
+                Console.ReadLine();
+                Console.Clear();
+                throw;
+            }              
+                
         }
     }
 }
