@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CustomGenerics.Structures
 {
-    internal class PQNode<T> : ICloneable
+    internal class PQNode<T>
     {
         public PQNode<T> Father;
         public PQNode<T> RightSon;
@@ -18,11 +18,6 @@ namespace CustomGenerics.Structures
         {
             Value = value;
             Priority = priority;
-        }
-
-        public object Clone()
-        {
-            return this.MemberwiseClone();
         }
     }
 }

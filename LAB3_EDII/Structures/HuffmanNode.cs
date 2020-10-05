@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CustomGenerics.Structures
 {
-    class HuffmanNode<T>
+    class HuffmanNode<T> where T : IProbability, new()
     {
         #region Variables
         public byte ID;

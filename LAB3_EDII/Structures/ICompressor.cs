@@ -6,7 +6,7 @@ namespace CustomGenerics.Structures
 {
     interface ICompressor
     {
-        void Compress();
-        void Decompress();
+        void Compress(string filePath);
+        void Decompress(string filePath);
     }
 }
