@@ -96,7 +96,7 @@ namespace CustomGenerics.Structures
         #endregion
 
         #region Pop
-        private T GetFirst()
+        public T GetFirst()
         {
             if (Root == null)
             {

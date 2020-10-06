@@ -24,7 +24,7 @@ namespace CustomGenerics.Structures
             FilePath = filePath;
         }
 
-        public async void Compress(IFormFile file)
+        public async void CompressFile(IFormFile file)
         {
             DestinyFileName = $"Compressed_{file.Name}.huff";
             OriginFileName = file.FileName;
@@ -34,47 +34,70 @@ namespace CustomGenerics.Structures
             using var reader = new BinaryReader(saver);
             int bufferSize = 2000000;
             var buffer = new byte[bufferSize];
-            Dictionary<byte, T> BytesDictionary = new Dictionary<byte, T>();
+            Dictionary<byte, HuffmanNode<T>> BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
 
             while (saver.Position != saver.Length - 1)
             {
                 buffer = reader.ReadBytes(bufferSize);
                 T value = new T();
+                HuffmanNode<T> Node;
                 foreach (var byteData in buffer)
                 {
                     if (!BytesDictionary.ContainsKey(byteData))
                     {
                         value.SetByte(byteData);
-                        BytesDictionary.Add(byteData, value);
+                        Node = new HuffmanNode<T>(value);
+                        BytesDictionary.Add(byteData, Node);
                     }
-                    BytesDictionary[byteData].AddFrecuency();
+                    BytesDictionary[byteData].Value.AddFrecuency();
                     value = new T();
                 }
             }
 
-            var differentBytes = 0.00;
-            foreach (var byteValue in BytesDictionary.Values)
+            var differentBytesCount = 0.00;
+            foreach (var Node in BytesDictionary.Values)
             {
-                differentBytes += byteValue.Probability;
+                differentBytesCount += Node.Value.Probability;
             }
 
-            PriorityQueue<T> priorityQueue = new PriorityQueue<T>();
+            PriorityQueue<HuffmanNode<T>> priorityQueue = new PriorityQueue<HuffmanNode<T>>();
 
-            foreach (var byteValue in BytesDictionary.Values)
+            foreach (var Node in BytesDictionary.Values)
             {
-                byteValue.SetProbability(differentBytes);
-                priorityQueue.AddValue(byteValue, byteValue.Probability);
+                Node.Value.SetProbability(differentBytesCount);
+                priorityQueue.AddValue(Node, Node.Value.Probability);
             }
 
             T NewNodeValue = new T();
             while (priorityQueue.DataNumber != 1)
             {
-                // Pensar como no perder los hijos que tiene en huffman al insertarlo en la cola de prioridad
-                // Una solución puede ser hacer tanto el dicionario como la cola de prioridad de nodos de huffman
+                var Node1 = priorityQueue.GetFirst();
+                var Node2 = priorityQueue.GetFirst();
+                NewNodeValue.Probability = Node1.Value.Probability + Node2.Value.Probability;
+                var NewNode = new HuffmanNode<T>(NewNodeValue);
+                if (Node1.Value.Probability < Node2.Value.Probability)
+                {
+                    NewNode.Leftson = Node2;
+                    NewNode.Rightson = Node1;
+                }
+                priorityQueue.AddValue(NewNode, NewNode.Value.Probability);
             }
+
+            // Aquí debemos agregar el código para huffman y ya luego ir leyendo el texto y transformarlo hacia el nuevo código.
         }
 
-        public void Decompress(IFormFile file)
+
+        public void CompressString(string text)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DecompressFile(IFormFile file)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string DecompressText(string text)
         {
             throw new NotImplementedException();
         }
