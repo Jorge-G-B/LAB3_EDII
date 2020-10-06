@@ -7,7 +7,9 @@ namespace CustomGenerics.Structures
     interface IProbability
     {
         double Probability { get; set; }
+        byte Value { get; set; }
         void AddFrecuency();
-        void SetProbability(int totalBytes);
+        void SetByte(byte value);
+        void SetProbability(double totalBytes);
     }
 }

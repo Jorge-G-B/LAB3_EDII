@@ -7,15 +7,15 @@ namespace CustomGenerics.Structures
     class HuffmanNode<T> where T : IProbability, new()
     {
         #region Variables
-        public byte ID;
-        public double Chance;
+        public T Value;
+        public string Code;
         public HuffmanNode<T> Rightson;
         public HuffmanNode<T> Leftson;
         #endregion
-        public HuffmanNode(byte newid, double newchance)
+
+        public HuffmanNode(T value)
         {
-            ID = newid;
-            Chance = newchance;
+            Value = value;
         }
     }
 }
