@@ -9,6 +9,7 @@ namespace CustomGenerics.Structures
         #region Variables
         public T Value;
         public string Code;
+        public HuffmanNode<T> Father;
         public HuffmanNode<T> Rightson;
         public HuffmanNode<T> Leftson;
         #endregion

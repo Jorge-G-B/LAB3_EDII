@@ -17,6 +17,7 @@ namespace CustomGenerics.Structures
         string FilePath;
         string DestinyFileName;
         string OriginFileName;
+        Dictionary<byte, HuffmanNode<T>> BytesDictionary;
         #endregion
 
         public Huffman(string filePath)
@@ -34,7 +35,7 @@ namespace CustomGenerics.Structures
             using var reader = new BinaryReader(saver);
             int bufferSize = 2000000;
             var buffer = new byte[bufferSize];
-            Dictionary<byte, HuffmanNode<T>> BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+            BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
 
             while (saver.Position != saver.Length - 1)
             {
@@ -75,6 +76,8 @@ namespace CustomGenerics.Structures
                 var Node2 = priorityQueue.GetFirst();
                 NewNodeValue.Probability = Node1.Value.Probability + Node2.Value.Probability;
                 var NewNode = new HuffmanNode<T>(NewNodeValue);
+                Node1.Father = NewNode;
+                Node2.Father = NewNode;
                 if (Node1.Value.Probability < Node2.Value.Probability)
                 {
                     NewNode.Leftson = Node2;
@@ -83,7 +86,14 @@ namespace CustomGenerics.Structures
                 priorityQueue.AddValue(NewNode, NewNode.Value.Probability);
             }
 
-            // Aquí debemos agregar el código para huffman y ya luego ir leyendo el texto y transformarlo hacia el nuevo código.
+            SetCode(Root, "");
+            //Ir leyendo el texto y transformarlo hacia el nuevo código.
+            saver.Seek(0, SeekOrigin.Begin);
+            while (saver.Position != saver.Length - 1)
+            {
+                buffer = reader.ReadBytes(bufferSize);
+                
+            }
         }
 
 
@@ -101,6 +111,38 @@ namespace CustomGenerics.Structures
         {
             throw new NotImplementedException();
         }
+
+        private void SetCode(HuffmanNode<T> node, string prevCode)
+        {
+            if (node.Father != null)
+            {
+                if (node.Father.Leftson == node)
+                {
+                    node.Code = $"{prevCode}0";
+                }
+                else
+                {
+                    node.Code = $"{prevCode}1";
+                }
+            }
+            else
+            {
+                node.Code = "";
+            }
+
+            BytesDictionary[node.Value.Value].Code = node.Code;
+
+            if (node.Leftson != null)
+            {
+                SetCode(node.Leftson, node.Code);
+            }
+
+            if (node.Rightson != null)
+            {
+                SetCode(node.Rightson, node.Code);
+            }
+        }
+
 
         //public PQNode<T> Insert(PQNode<T> Node1, PQNode<T> Node2)
         //{
