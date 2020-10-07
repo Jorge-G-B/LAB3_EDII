@@ -4,11 +4,11 @@ using System.Text;
 
 namespace CustomGenerics.Structures
 {
-    interface IProbability
+    public interface IProbability
     {
-        double Probability { get; set; }
-        int Frequency { get; set; }
-        byte Value { get; set; }
+        double GetProbability();
+        int GetFrequency();
+        byte GetValue();
         void AddFrecuency();
         void SetByte(byte value);
         void SetProbability(double totalBytes);

@@ -7,16 +7,16 @@ using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CustomGenerics.Structures
 {
-    class Huffman<T> : ICompressor where T : IProbability, new()
+    public class Huffman<T> : ICompressor where T : IProbability, new()
     {
         #region Variables
-        public HuffmanNode<T> Root;
+        HuffmanNode<T> Root;
         public int NextId = 1;
         FileStream DestinyFile;
-        FileStream OriginFile;
         string FilePath;
         string DestinyFileName;
         string OriginFileName;
@@ -28,9 +28,8 @@ namespace CustomGenerics.Structures
             FilePath = filePath;
         }
 
-        public async void CompressFile(IFormFile file)
+        public async Task<string> CompressFile(IFormFile file)
         {
-            DestinyFileName = $"Compressed_{file.Name}.huff";
             OriginFileName = file.FileName;
             using var saver = new FileStream($"{FilePath}/{OriginFileName}", FileMode.OpenOrCreate);
             await file.CopyToAsync(saver);
@@ -61,7 +60,7 @@ namespace CustomGenerics.Structures
             var differentBytesCount = 0.00;
             foreach (var Node in BytesDictionary.Values)
             {
-                differentBytesCount += Node.Value.Frequency;
+                differentBytesCount += Node.Value.GetFrequency();
             }
 
             PriorityQueue<HuffmanNode<T>> priorityQueue = new PriorityQueue<HuffmanNode<T>>();
@@ -69,7 +68,7 @@ namespace CustomGenerics.Structures
             foreach (var Node in BytesDictionary.Values)
             {
                 Node.Value.SetProbability(differentBytesCount);
-                priorityQueue.AddValue(Node, Node.Value.Probability);
+                priorityQueue.AddValue(Node, Node.Value.GetProbability());
             }
 
             T NewNodeValue = new T();
@@ -77,30 +76,38 @@ namespace CustomGenerics.Structures
             {
                 var Node1 = priorityQueue.GetFirst();
                 var Node2 = priorityQueue.GetFirst();
-                NewNodeValue.Probability = Node1.Value.Probability + Node2.Value.Probability;
+                NewNodeValue.SetProbability(Node1.Value.GetProbability() + Node2.Value.GetProbability());
                 var NewNode = new HuffmanNode<T>(NewNodeValue);
                 Node1.Father = NewNode;
                 Node2.Father = NewNode;
-                if (Node1.Value.Probability < Node2.Value.Probability)
+                if (Node1.Value.GetProbability() < Node2.Value.GetProbability())
                 {
                     NewNode.Leftson = Node2;
                     NewNode.Rightson = Node1;
                 }
-                priorityQueue.AddValue(NewNode, NewNode.Value.Probability);
+                priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
             }
 
             SetCode(Root, "");
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
             saver.Seek(0, SeekOrigin.Begin);
             string FinalText = "";
-            FinalText += BytesDictionary.Values.Count.ToString();
-            int maxValue = BytesDictionary.Values.Max(x => x.Value.Frequency);
+            string Metadata = "";
+            Metadata += BytesDictionary.Values.Count.ToString();
+            int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
             var intBytes = BitConverter.GetBytes(maxValue);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(intBytes);
             }
-            FinalText += intBytes.Length.ToString();
+            Metadata += intBytes.Length.ToString();
+            byte[] numInBytes = new byte[intBytes.Length];
+            foreach (var byteObject in BytesDictionary.Values)
+            {
+                Metadata += byteObject.Value.GetValue() + Encoding.UTF8.GetString(new byte[] { Convert.ToByte(byteObject.Value.GetFrequency().ToString()) });
+            }
+            //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
+
             while (saver.Position != saver.Length - 1)
             {
                 buffer = reader.ReadBytes(bufferSize);
@@ -114,16 +121,32 @@ namespace CustomGenerics.Structures
             {
                 FinalText += "0";
             }
+
             var stringBytes = Enumerable.Range(0, FinalText.Length / 8).Select(x => FinalText.Substring(x * 8, 8));
+            FinalText = "";
+            byte[] bytes = new byte[1];
+            foreach (var byteData in stringBytes)
+            {
+                bytes[0] = Convert.ToByte(byteData, 2);
+                FinalText += Encoding.UTF8.GetString(bytes);
+            }
+
+            string savingText = Metadata + FinalText;
+            DestinyFileName = $"Compressed_{file.Name}.huff";
+            var newFile = new FileStream($"{FilePath}/{DestinyFileName}", FileMode.OpenOrCreate);
+            var writer = new BinaryWriter(newFile);
+            writer.Write(savingText);
+            newFile.Close();
+            writer.Close();
+            return $"{FilePath}/{DestinyFileName}";
         }
 
-
-        public void CompressString(string text)
+        public Task<string> DecompressFile(IFormFile file)
         {
             throw new NotImplementedException();
         }
 
-        public void DecompressFile(IFormFile file)
+        public void CompressText(string text)
         {
             throw new NotImplementedException();
         }
@@ -145,7 +168,7 @@ namespace CustomGenerics.Structures
                 {
                     node.Code = $"{prevCode}1";
                 }
-                BytesDictionary[node.Value.Value].Code = node.Code;
+                BytesDictionary[node.Value.GetValue()].Code = node.Code;
             }
             else
             {

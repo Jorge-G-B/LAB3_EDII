@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace CustomGenerics.Structures
 {
     interface ICompressor
     {
-        void CompressFile(IFormFile file);
-        void CompressString(string text);
-        void DecompressFile(IFormFile file);
+        Task<string> CompressFile(IFormFile file);
+        Task<string> DecompressFile(IFormFile file);
+        void CompressText(string text);
         string DecompressText(string text);
     }
 }
