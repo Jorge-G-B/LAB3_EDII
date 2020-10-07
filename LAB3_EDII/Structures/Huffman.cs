@@ -38,9 +38,9 @@ namespace CustomGenerics.Structures
             int bufferSize = 2000000;
             var buffer = new byte[bufferSize];
             BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
-            saver.Position = 0;
+            saver.Position = saver.Seek(0, SeekOrigin.Begin);
 
-            while (saver.Position != saver.Length - 1)
+            while (saver.Position != saver.Length)
             {
                 buffer = reader.ReadBytes(bufferSize);
                 T value = new T();
@@ -58,17 +58,17 @@ namespace CustomGenerics.Structures
                 }
             }
 
-            var differentBytesCount = 0.00;
+            double BytesCount = 0.00;
             foreach (var Node in BytesDictionary.Values)
             {
-                differentBytesCount += Node.Value.GetFrequency();
+                BytesCount += Node.Value.GetFrequency();
             }
 
             PriorityQueue<HuffmanNode<T>> priorityQueue = new PriorityQueue<HuffmanNode<T>>();
 
             foreach (var Node in BytesDictionary.Values)
             {
-                Node.Value.SetProbability(differentBytesCount);
+                Node.Value.CalculateProbability(BytesCount);
                 priorityQueue.AddValue(Node, Node.Value.GetProbability());
             }
 
@@ -86,9 +86,17 @@ namespace CustomGenerics.Structures
                     NewNode.Leftson = Node2;
                     NewNode.Rightson = Node1;
                 }
+                else
+                {
+                    NewNode.Rightson = Node2;
+                    NewNode.Leftson = Node1;
+                }
                 priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
+                Root = NewNode;
             }
 
+
+                
             SetCode(Root, "");
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
             saver.Seek(0, SeekOrigin.Begin);

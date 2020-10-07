@@ -19,6 +19,11 @@ namespace API.Models_
             Frequency++;
         }
 
+        public void CalculateProbability(double totalBytes)
+        {
+            Probability = Convert.ToDouble(Frequency) / totalBytes;
+        }
+
         public int GetFrequency()
         {
             return Frequency;
@@ -39,9 +44,9 @@ namespace API.Models_
             Value = value;
         }
 
-        public void SetProbability(double totalBytes)
+        public void SetProbability(double number)
         {
-            Probability = Convert.ToDouble(Frequency) / totalBytes;
+            Probability = number;
         }
     }
 }
