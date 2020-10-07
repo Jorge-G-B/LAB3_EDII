@@ -16,7 +16,6 @@ namespace CustomGenerics.Structures
         HuffmanNode<T> Root;
         public int NextId = 1;
         FileStream DestinyFile;
-        FileStream OriginFile;
         string FilePath;
         string DestinyFileName;
         string OriginFileName;
@@ -28,9 +27,8 @@ namespace CustomGenerics.Structures
             FilePath = filePath;
         }
 
-        public async void CompressFile(IFormFile file)
+        public async string CompressFile(IFormFile file)
         {
-            DestinyFileName = $"Compressed_{file.Name}.huff";
             OriginFileName = file.FileName;
             using var saver = new FileStream($"{FilePath}/{OriginFileName}", FileMode.OpenOrCreate);
             await file.CopyToAsync(saver);
@@ -133,6 +131,13 @@ namespace CustomGenerics.Structures
             }
 
             string savingText = Metadata + FinalText;
+            DestinyFileName = $"Compressed_{file.Name}.huff";
+            var newFile = new FileStream($"{FilePath}/{DestinyFileName}", FileMode.OpenOrCreate);
+            var writer = new BinaryWriter(newFile);
+            writer.Write(savingText);
+            newFile.Close();
+            writer.Close();
+            return $"{FilePath}/{DestinyFileName}";
         }
 
 
