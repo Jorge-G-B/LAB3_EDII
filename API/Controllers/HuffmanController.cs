@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using API.Helpers_;
+using API.Models_;
+using CustomGenerics.Structures;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -59,19 +62,26 @@ namespace API.Controllers
         // POST api/<HuffmanController>
         [HttpPost]
         [Route("api/compress/{name}")]
-        public IActionResult PostHuffman(string name)
+        public IActionResult PostHuffman([FromForm] IFormFile file)
         {
             try
             {
 
+                Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
+                var filepath = Storage.Instance.HuffmanTree.CompressFile(file);
 
-                return Ok();
+                return PhysicalFile(filepath, MediaTypeNames.Text.Plain, $"{file.FileName}.huff");
             }
             catch
             {
                 return StatusCode(500);
                 
             }
+        }
+
+        private IActionResult PhysicalFile(Task<string> filepath, string plain, object p)
+        {
+            throw new NotImplementedException();
         }
     }
 }

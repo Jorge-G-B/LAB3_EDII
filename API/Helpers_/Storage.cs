@@ -20,6 +20,6 @@ namespace API.Helpers_
                 return _instance;
             }
         }
-        Huffman<HuffmanChar> Huffman;
+        public Huffman<HuffmanChar> HuffmanTree;
     }
 }
