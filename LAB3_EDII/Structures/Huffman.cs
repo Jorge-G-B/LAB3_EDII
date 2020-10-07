@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace CustomGenerics.Structures
@@ -58,7 +61,7 @@ namespace CustomGenerics.Structures
             var differentBytesCount = 0.00;
             foreach (var Node in BytesDictionary.Values)
             {
-                differentBytesCount += Node.Value.Probability;
+                differentBytesCount += Node.Value.Frequency;
             }
 
             PriorityQueue<HuffmanNode<T>> priorityQueue = new PriorityQueue<HuffmanNode<T>>();
@@ -89,11 +92,29 @@ namespace CustomGenerics.Structures
             SetCode(Root, "");
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
             saver.Seek(0, SeekOrigin.Begin);
+            string FinalText = "";
+            FinalText += BytesDictionary.Values.Count.ToString();
+            int maxValue = BytesDictionary.Values.Max(x => x.Value.Frequency);
+            var intBytes = BitConverter.GetBytes(maxValue);
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(intBytes);
+            }
+            FinalText += intBytes.Length.ToString();
             while (saver.Position != saver.Length - 1)
             {
                 buffer = reader.ReadBytes(bufferSize);
-                
+                foreach (var byteData in buffer)
+                {
+                    FinalText += BytesDictionary[byteData].Code;
+                }
             }
+
+            while (FinalText.Length % 8 == 0)
+            {
+                FinalText += "0";
+            }
+            var stringBytes = Enumerable.Range(0, FinalText.Length / 8).Select(x => FinalText.Substring(x * 8, 8));
         }
 
 
@@ -124,13 +145,12 @@ namespace CustomGenerics.Structures
                 {
                     node.Code = $"{prevCode}1";
                 }
+                BytesDictionary[node.Value.Value].Code = node.Code;
             }
             else
             {
                 node.Code = "";
             }
-
-            BytesDictionary[node.Value.Value].Code = node.Code;
 
             if (node.Leftson != null)
             {
