@@ -28,6 +28,12 @@ namespace API.Controllers
             Environment = env;
         }
 
+        [HttpGet]
+        public IEnumerable<string> TryGet()
+        {
+            return new string[] { "value1", "value2" };
+        }
+
         // GET: api/<HuffmanController>
         [HttpGet]
         [Route("api/compressions")]
@@ -54,28 +60,24 @@ namespace API.Controllers
             }
             catch
             {
-
                 return StatusCode(500); 
             }
         }
 
         // POST api/<HuffmanController>
         [HttpPost]
-        [Route("api/compress/{name}")]
-        public IActionResult PostHuffman([FromForm] IFormFile file)
+        [Route("compress/{name}")]
+        public IActionResult PostHuffman([FromForm] IFormFile file, string name)
         {
             try
             {
-
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
                 var filepath = Storage.Instance.HuffmanTree.CompressFile(file);
-
-                return PhysicalFile(filepath, MediaTypeNames.Text.Plain, $"{file.FileName}.huff");
+                return PhysicalFile(filepath, MediaTypeNames.Text.Plain, $"{name}.huff");
             }
             catch
             {
                 return StatusCode(500);
-                
             }
         }
 

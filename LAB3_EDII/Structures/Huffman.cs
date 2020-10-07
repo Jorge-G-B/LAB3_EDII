@@ -38,6 +38,7 @@ namespace CustomGenerics.Structures
             int bufferSize = 2000000;
             var buffer = new byte[bufferSize];
             BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+            saver.Position = 0;
 
             while (saver.Position != saver.Length - 1)
             {
