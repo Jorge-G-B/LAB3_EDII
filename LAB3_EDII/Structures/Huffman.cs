@@ -7,6 +7,7 @@ using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CustomGenerics.Structures
 {
@@ -27,7 +28,7 @@ namespace CustomGenerics.Structures
             FilePath = filePath;
         }
 
-        public async string CompressFile(IFormFile file)
+        public async Task<string> CompressFile(IFormFile file)
         {
             OriginFileName = file.FileName;
             using var saver = new FileStream($"{FilePath}/{OriginFileName}", FileMode.OpenOrCreate);
@@ -140,13 +141,12 @@ namespace CustomGenerics.Structures
             return $"{FilePath}/{DestinyFileName}";
         }
 
-
-        public void CompressString(string text)
+        public Task<string> DecompressFile(IFormFile file)
         {
             throw new NotImplementedException();
         }
 
-        public void DecompressFile(IFormFile file)
+        public void CompressText(string text)
         {
             throw new NotImplementedException();
         }
