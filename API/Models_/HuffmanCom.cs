@@ -12,6 +12,5 @@ namespace API.Models_
         public double compressionRatio { get; set; }
         public double compressionFactor { get; set; }
         public double reductionPercentage { get; set; }
-
     }
 }

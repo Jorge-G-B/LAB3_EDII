@@ -20,6 +20,6 @@ namespace API.Helpers_
                 return _instance;
             }
         }
-        public PriorityQueue<HuffmanCom> HuffmanQueue;
+        Huffman<HuffmanChar> Huffman;
     }
 }
