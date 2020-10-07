@@ -93,14 +93,22 @@ namespace CustomGenerics.Structures
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
             saver.Seek(0, SeekOrigin.Begin);
             string FinalText = "";
-            FinalText += BytesDictionary.Values.Count.ToString();
+            string Metadata = "";
+            Metadata += BytesDictionary.Values.Count.ToString();
             int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
             var intBytes = BitConverter.GetBytes(maxValue);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(intBytes);
             }
-            FinalText += intBytes.Length.ToString();
+            Metadata += intBytes.Length.ToString();
+            byte[] numInBytes = new byte[intBytes.Length];
+            foreach (var byteObject in BytesDictionary.Values)
+            {
+                Metadata += byteObject.Value.GetValue() + Encoding.UTF8.GetString(new byte[] { Convert.ToByte(byteObject.Value.GetFrequency().ToString()) });
+            }
+            //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
+
             while (saver.Position != saver.Length - 1)
             {
                 buffer = reader.ReadBytes(bufferSize);
@@ -114,7 +122,17 @@ namespace CustomGenerics.Structures
             {
                 FinalText += "0";
             }
+
             var stringBytes = Enumerable.Range(0, FinalText.Length / 8).Select(x => FinalText.Substring(x * 8, 8));
+            FinalText = "";
+            byte[] bytes = new byte[1];
+            foreach (var byteData in stringBytes)
+            {
+                bytes[0] = Convert.ToByte(byteData, 2);
+                FinalText += Encoding.UTF8.GetString(bytes);
+            }
+
+            string savingText = Metadata + FinalText;
         }
 
 
