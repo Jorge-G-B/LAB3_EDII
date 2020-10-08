@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
+using System.ComponentModel;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -44,20 +45,9 @@ namespace API.Controllers
         // GET: api/<HuffmanController>
         [HttpGet]
         [Route("api/compressions")]
-        public IActionResult GetLCompress([FromForm] IFormFile file)
+        public List<HuffmanCom> GetLCompress([FromForm] IFormFile file)
         {
-            try
-            {
-                var text = "";
-                //var CompressionsL = JsonSerializer.Serialize<List<HuffmanCom>>(text);
-                return Ok();
-            }
-            catch 
-            {
-
-                
-                return StatusCode(500); 
-            }
+            return Storage.Instance.HistoryList;
         }
 
         // GET api/<HuffmanController>/5
@@ -108,6 +98,7 @@ namespace API.Controllers
                 HuffmanInfo.GetRatio(BNC, BNO);
                 HuffmanInfo.GetFactor(BNC, BNO);
                 HuffmanInfo.RPercentage();
+                Storage.Instance.HistoryList.Add(HuffmanInfo);
                 
                 return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, $"{name}.huff");
             }
