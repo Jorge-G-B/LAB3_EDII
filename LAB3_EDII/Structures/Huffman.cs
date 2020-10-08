@@ -196,5 +196,6 @@ namespace CustomGenerics.Structures
                 SetCode(node.Rightson, node.Code);
             }
         }
+        
     }
 }
