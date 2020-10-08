@@ -19,21 +19,19 @@ namespace API.Models_
 
         }
 
-        internal static double GetRatio(int bNC, int bNO)
+        public void GetRatio(int bNC, int bNO)
         {
-            int ratio = bNC / bNO;
-            return ratio;
+            CompressionRatio = bNC / bNO;
         }
-        internal static double GetFactor(int NumBC, int NumBO)
-        {
-            int factor = NumBO / NumBC;
-            return factor;
-        }
-        internal static double RPercentage(double ratio)
-        {
-            double percentage = ratio * 100;
-            return percentage;
 
+        public void GetFactor(int NumBC, int NumBO)
+        {
+            CompressionFactor = NumBO / NumBC;
+        }
+
+        public void RPercentage()
+        {
+            ReductionPercentage = CompressionRatio * 100;
         }
     }
 }

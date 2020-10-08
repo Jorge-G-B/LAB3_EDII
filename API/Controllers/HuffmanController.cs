@@ -75,8 +75,8 @@ namespace API.Controllers
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
-                var filepath = Storage.Instance.HuffmanTree.DecompressFile(file);
-                return Ok(); 
+                Storage.Instance.HuffmanTree.DecompressFile(file);
+                return PhysicalFile($"{Environment.ContentRootPath}/{file.Name}Decompressed", ".txt"); 
             }
             catch
             {
@@ -96,30 +96,25 @@ namespace API.Controllers
                 await file.CopyToAsync(saver);
                 var CountBytesO = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{file.Name}");
                 int BNO = CountBytesO.Count();
-
-
-                var filepath = Storage.Instance.HuffmanTree.CompressFile(file);
+                
+                Storage.Instance.HuffmanTree.CompressFile(file, name);
                 
                 using var saver2 = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
                 await file.CopyToAsync(saver);
                 var CountBytesC = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{name}");
                 int BNC = CountBytesO.Count();
 
-                double ratio = HuffmanCom.GetRatio(BNC, BNO);
-                double factor = HuffmanCom.GetFactor(BNC, BNO);
-                double percent = HuffmanCom.RPercentage(ratio);
+                var HuffmanInfo = new HuffmanCom();
+                HuffmanInfo.GetRatio(BNC, BNO);
+                HuffmanInfo.GetFactor(BNC, BNO);
+                HuffmanInfo.RPercentage();
                 
-                return PhysicalFile(filepath, MediaTypeNames.Text.Plain, $"{name}.huff");
+                return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, $"{name}.huff");
             }
             catch
             {
                 return StatusCode(500);
             }
-        }
-
-        private IActionResult PhysicalFile(Task<string> filepath, string plain, object p)
-        {
-            throw new NotImplementedException();
         }
     }
 }
