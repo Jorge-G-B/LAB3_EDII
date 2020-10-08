@@ -110,11 +110,9 @@ namespace CustomGenerics.Structures
             int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
             var intBytes = ByteGenerator.ConvertToBytes(maxValue.ToString());
             Metadata += Char.ConvertFromUtf32(intBytes.Length);
-            byte[] numInBytes = new byte[intBytes.Length]; //Revisar de llenar los demás espacios con 00000 en cada valor
             foreach (var byteObject in BytesDictionary.Values)
             {
-                Metadata += Encoding.ASCII.GetString(new byte[] { byteObject.Value.GetValue() }) + 
-                Encoding.ASCII.GetString(new byte[] { Convert.ToByte(byteObject.Value.GetFrequency().ToString()) });
+                Metadata += Encoding.ASCII.GetString(new byte[] { byteObject.Value.GetValue() }) + GetASCIIChars(BitConverter.GetBytes(byteObject.Value.GetFrequency()), intBytes.Length);
             }
             //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
 
@@ -269,6 +267,29 @@ namespace CustomGenerics.Structures
             if (node.Rightson != null)
             {
                 SetCode(node.Rightson, node.Code);
+            }
+        }
+
+        private string GetASCIIChars(byte[] array, int count)
+        {
+            if (array.Length < count)
+            {
+                List<byte> list = new List<byte>();
+                foreach (var value in array)
+                {
+                    list.Add(value);
+                }
+                while (list.Count < count)
+                {
+                    list.Add(default);
+                }
+                string returningString = "";
+                var arrayOfBytes = list.ToArray();
+                return Encoding.ASCII.GetString(arrayOfBytes);
+            }
+            else
+            {
+                return Encoding.ASCII.GetString(array);
             }
         }
     }
