@@ -11,6 +11,7 @@ namespace CustomGenerics.Structures
         byte GetValue();
         void AddFrecuency();
         void SetByte(byte value);
-        void SetProbability(double totalBytes);
+        void CalculateProbability(double totalBytes);
+        void SetProbability(double number);
     }
 }
