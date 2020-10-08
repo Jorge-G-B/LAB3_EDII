@@ -28,6 +28,9 @@ namespace CustomGenerics.Structures
         {
             FilePath = filePath;
         }
+        public Huffman()
+        {
+        }
 
         public async Task<string> CompressFile(IFormFile file)
         {
@@ -124,7 +127,7 @@ namespace CustomGenerics.Structures
                 }
             }
 
-            while (FinalText.Length % 8 == 0)
+            while (FinalText.Length % 8 != 0)
             {
                 FinalText += "0";
             }
@@ -153,9 +156,82 @@ namespace CustomGenerics.Structures
             throw new NotImplementedException();
         }
 
-        public void CompressText(string text)
+        public string CompressText(string text)
         {
-            throw new NotImplementedException();
+            int bufferSize = 2000000;
+            var buffer = new byte[bufferSize];
+            BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+            buffer = ByteGenerator.ConvertToBytes(text);
+            T value = new T();
+            HuffmanNode<T> Node;
+            foreach (var byteData in buffer)
+            {
+                if (!BytesDictionary.ContainsKey(byteData))
+                {
+                    value.SetByte(byteData);
+                    Node = new HuffmanNode<T>(value);
+                    BytesDictionary.Add(byteData, Node);
+                }
+                BytesDictionary[byteData].Value.AddFrecuency();
+                value = new T();
+            }
+            var BytesCount = 0.00;
+            foreach (var Nodes in BytesDictionary.Values)
+            {
+                BytesCount += Nodes.Value.GetFrequency();
+            }
+
+            PriorityQueue<HuffmanNode<T>> priorityQueue = new PriorityQueue<HuffmanNode<T>>();
+
+            foreach (var Nodes in BytesDictionary.Values)
+            {
+                Nodes.Value.CalculateProbability(BytesCount);
+                priorityQueue.AddValue(Nodes, Nodes.Value.GetProbability());
+            }
+            
+            while (priorityQueue.DataNumber != 1)
+            {
+                T NewNodeValue = new T();
+                var Node1 = priorityQueue.GetFirst();
+                var Node2 = priorityQueue.GetFirst();
+                NewNodeValue.SetProbability(Node1.Value.GetProbability() + Node2.Value.GetProbability());
+                var NewNode = new HuffmanNode<T>(NewNodeValue);
+                Node1.Father = NewNode;
+                Node2.Father = NewNode;
+                if (Node1.Value.GetProbability() < Node2.Value.GetProbability())
+                {
+                    NewNode.Leftson = Node2;
+                    NewNode.Rightson = Node1;
+                }
+                else
+                {
+                    NewNode.Rightson = Node2;
+                    NewNode.Leftson = Node1;
+                }
+                priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
+                Root = NewNode;
+            }
+            SetCode(Root, "");
+            string FinalText = "";
+            foreach (var byteData in buffer)
+            {
+                FinalText += BytesDictionary[byteData].Code;
+            }
+            while (FinalText.Length % 8 != 0)
+            {
+                FinalText += "0";
+            }
+
+            var stringBytes = Enumerable.Range(0, FinalText.Length / 8).Select(x => FinalText.Substring(x * 8, 8));
+            FinalText = "";
+            byte[] bytes = new byte[1];
+            foreach (var byteData in stringBytes)
+            {
+                bytes[0] = Convert.ToByte(byteData, 2);
+                FinalText += Encoding.UTF8.GetString(bytes);
+            }
+            return FinalText;
+
         }
 
         public string DecompressText(string text)
@@ -175,7 +251,6 @@ namespace CustomGenerics.Structures
                 {
                     node.Code = $"{prevCode}1";
                 }
-
                 if (BytesDictionary.ContainsKey(node.Value.GetValue()))
                 {
                     BytesDictionary[node.Value.GetValue()].Code = node.Code;

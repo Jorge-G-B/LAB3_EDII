@@ -10,7 +10,7 @@ namespace CustomGenerics.Structures
     {
         Task<string> CompressFile(IFormFile file);
         Task<string> DecompressFile(IFormFile file);
-        void CompressText(string text);
+        string CompressText(string text);
         string DecompressText(string text);
     }
 }
