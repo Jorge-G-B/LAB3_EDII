@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CustomGenerics.Utilities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -99,21 +100,18 @@ namespace CustomGenerics.Structures
                 
             SetCode(Root, "");
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
-            saver.Seek(0, SeekOrigin.Begin);
+            saver.Position = saver.Seek(0, SeekOrigin.Begin);
             string FinalText = "";
             string Metadata = "";
-            Metadata += BytesDictionary.Values.Count.ToString();
+            Metadata += Char.ConvertFromUtf32(BytesDictionary.Values.Count); // Convertir este número a su representación en ascii
             int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
-            var intBytes = BitConverter.GetBytes(maxValue);
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(intBytes);
-            }
-            Metadata += intBytes.Length.ToString();
-            byte[] numInBytes = new byte[intBytes.Length];
+            var intBytes = ByteGenerator.ConvertToBytes(maxValue.ToString());
+            Metadata += Char.ConvertFromUtf32(intBytes.Length);
+            byte[] numInBytes = new byte[intBytes.Length]; //Revisar de llenar los demás espacios con 00000 en cada valor
             foreach (var byteObject in BytesDictionary.Values)
             {
-                Metadata += byteObject.Value.GetValue() + Encoding.UTF8.GetString(new byte[] { Convert.ToByte(byteObject.Value.GetFrequency().ToString()) });
+                Metadata += Encoding.ASCII.GetString(new byte[] { byteObject.Value.GetValue() }) + 
+                Encoding.ASCII.GetString(new byte[] { Convert.ToByte(byteObject.Value.GetFrequency().ToString()) });
             }
             //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
 
@@ -177,7 +175,11 @@ namespace CustomGenerics.Structures
                 {
                     node.Code = $"{prevCode}1";
                 }
-                BytesDictionary[node.Value.GetValue()].Code = node.Code;
+
+                if (BytesDictionary.ContainsKey(node.Value.GetValue()))
+                {
+                    BytesDictionary[node.Value.GetValue()].Code = node.Code;
+                }
             }
             else
             {
@@ -194,16 +196,5 @@ namespace CustomGenerics.Structures
                 SetCode(node.Rightson, node.Code);
             }
         }
-
-
-        //public PQNode<T> Insert(PQNode<T> Node1, PQNode<T> Node2)
-        //{
-        //    HuffmanNode<T> Right = new HuffmanNode<T>(Node1.Key, Node1.Priority);
-        //    HuffmanNode<T> Left = new HuffmanNode<T>(Node2.Key, Node2.Priority);
-        //    byte Id = Convert.ToByte("N" + Convert.ToString(NextId));
-        //    HuffmanNode<T> Father = new HuffmanNode<T>(Id, (Node1.Priority + Node2.Priority));
-        //    Father.Rightson = Right;
-        //    Father.Leftson = Left;
-        //}
     }
 }
