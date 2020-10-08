@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CustomGenerics.Structures
@@ -220,7 +222,7 @@ namespace CustomGenerics.Structures
                 FinalText += "0";
             }
 
-            var stringBytes = Enumerable.Range(0, FinalText.Length / 8).Select(x => FinalText.Substring(x * 8, 8));
+            var stringBytes = (from Match m in Regex.Matches(FinalText, @"\d{8}") select m.Value).ToList();
             FinalText = "";
             byte[] bytes = new byte[1];
             foreach (var byteData in stringBytes)
@@ -229,7 +231,6 @@ namespace CustomGenerics.Structures
                 FinalText += Encoding.UTF8.GetString(bytes);
             }
             return FinalText;
-
         }
 
         public string DecompressText(string text)
