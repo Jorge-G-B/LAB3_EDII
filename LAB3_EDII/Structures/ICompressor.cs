@@ -8,8 +8,8 @@ namespace CustomGenerics.Structures
 {
     interface ICompressor
     {
-        void CompressFile(IFormFile file, string name);
-        void DecompressFile(IFormFile file);
+        Task CompressFile(IFormFile file, string name);
+        Task DecompressFile(IFormFile file);
         string CompressText(string text);
         string DecompressText(string text);
     }

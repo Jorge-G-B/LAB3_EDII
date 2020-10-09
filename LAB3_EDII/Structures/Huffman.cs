@@ -19,10 +19,7 @@ namespace CustomGenerics.Structures
         #region Variables
         HuffmanNode<T> Root;
         public int NextId = 1;
-        FileStream DestinyFile;
         string FilePath;
-        string DestinyFileName;
-        string OriginFileName;
         Dictionary<byte, HuffmanNode<T>> BytesDictionary;
         PriorityQueue<HuffmanNode<T>> priorityQueue;
         double BytesCount;
@@ -36,10 +33,9 @@ namespace CustomGenerics.Structures
         {
         }
 
-        public async void CompressFile(IFormFile file, string name)
+        public async Task CompressFile(IFormFile file, string name)
         {
-            OriginFileName = file.FileName;
-            using var saver = new FileStream($"{FilePath}/{OriginFileName}", FileMode.OpenOrCreate);
+            using var saver = new FileStream($"{FilePath}/{file.Name}", FileMode.OpenOrCreate);
             await file.CopyToAsync(saver);
 
             using var reader = new BinaryReader(saver);
@@ -71,20 +67,20 @@ namespace CustomGenerics.Structures
                 
             SetCode(Root, "");
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
-            saver.Position = saver.Seek(0, SeekOrigin.Begin);
             string FinalText = "";
             string Metadata = "";
-            Metadata += Char.ConvertFromUtf32(BytesDictionary.Values.Count); // Convertir este número a su representación en ascii
+            Metadata += (char)BytesDictionary.Values.Count; // Convertir este número a su representación en ascii
             int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
-            var intBytes = ByteGenerator.ConvertToBytes(maxValue.ToString());
-            Metadata += Char.ConvertFromUtf32(intBytes.Length);
+            var intBytes = ConvertToBinary(maxValue).Length / 8;
+            Metadata += (char)intBytes;
             foreach (var byteObject in BytesDictionary.Values)
             {
-                Metadata += Encoding.ASCII.GetString(new byte[] { byteObject.Value.GetValue() }) + GetASCIIChars(BitConverter.GetBytes(byteObject.Value.GetFrequency()), intBytes.Length);
+                Metadata += ByteGenerator.ConvertToString(new byte[] { byteObject.Value.GetValue() }) + ByteGenerator.ConvertToString(GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes));
             }
             //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
 
-            while (saver.Position != saver.Length - 1)
+            saver.Position = saver.Seek(0, SeekOrigin.Begin);
+            while (saver.Position != saver.Length)
             {
                 buffer = reader.ReadBytes(bufferSize);
                 foreach (var byteData in buffer)
@@ -92,6 +88,7 @@ namespace CustomGenerics.Structures
                     FinalText += BytesDictionary[byteData].Code;
                 }
             }
+            saver.Close();
 
             while (FinalText.Length % 8 != 0)
             {
@@ -104,18 +101,18 @@ namespace CustomGenerics.Structures
             foreach (var byteData in stringBytes)
             {
                 bytes[0] = Convert.ToByte(byteData, 2);
-                FinalText += Encoding.UTF8.GetString(bytes);
+                FinalText += ByteGenerator.ConvertToString(bytes);
             }
 
             string savingText = Metadata + FinalText;
-            var newFile = new FileStream($"{FilePath}/{name}.huff", FileMode.OpenOrCreate);
+            var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
             var writer = new BinaryWriter(newFile);
             writer.Write(savingText);
             newFile.Close();
             writer.Close();
         }
 
-        public async void DecompressFile(IFormFile file)
+        public async Task DecompressFile(IFormFile file)
         {
             throw new NotImplementedException();
         }
@@ -206,13 +203,40 @@ namespace CustomGenerics.Structures
                 binaryText += Convert.ToString(value,2);
             }
 
-            string binary = ConverttoBinary(3);
+            string binary = ConvertToBinary(3);
             return binaryText;
         }
 
-        public string ConverttoBinary(int number)
+        private string ConvertToBinary(int number)
         {
-            return (Convert.ToString(number,2));
+            string value = Convert.ToString(number, 2);
+            while (value.Length % 8 != 0)
+            {
+                value = "0" + value;
+            }
+            return value;
+        }
+
+        private string ConvertToFixedBinary(int number, int byteQty)
+        {
+            string value = Convert.ToString(number, 2);
+            while (value.Length % 8 != 0 || value.Length / 8 != byteQty)
+            {
+                value = "0" + value;
+            }
+            return value;
+        }
+
+        private byte[] GetBytesFromInt(int number, int byteQty)
+        {
+            string text = ConvertToFixedBinary(number, byteQty);
+            var stringBytes = (from Match m in Regex.Matches(text, @"\d{8}") select m.Value).ToList();
+            byte[] byteArray = new byte[stringBytes.Count];
+            for (int i = 0; i < byteArray.Length; i++)
+            {
+                byteArray[i] = Convert.ToByte(stringBytes[i], 2);
+            }
+            return byteArray;
         }
 
         private void SetCode(HuffmanNode<T> node, string prevCode)

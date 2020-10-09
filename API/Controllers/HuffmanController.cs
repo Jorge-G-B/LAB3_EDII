@@ -76,19 +76,20 @@ namespace API.Controllers
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
+                if (System.IO.File.Exists($"{Environment.ContentRootPath}/{file.Name}"))
+                {
+                    System.IO.File.Delete($"{Environment.ContentRootPath}/{file.Name}");
+                }
                 using var saver = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
                 await file.CopyToAsync(saver);
                 saver.Close();
                 var CountBytesO = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{file.Name}");
                 int BNO = CountBytesO.Count();
                 
-                Storage.Instance.HuffmanTree.CompressFile(file, name);
+                await Storage.Instance.HuffmanTree.CompressFile(file, name);
                 
-                using var saver2 = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
-                await file.CopyToAsync(saver);
-                saver2.Close();
                 var CountBytesC = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{name}");
-                int BNC = CountBytesO.Count();
+                int BNC = CountBytesC.Count();
 
                 var HuffmanInfo = new HuffmanCom();
                 HuffmanInfo.GetRatio(BNC, BNO);
