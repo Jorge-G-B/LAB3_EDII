@@ -35,7 +35,7 @@ namespace CustomGenerics.Structures
 
         public async Task CompressFile(IFormFile file, string name)
         {
-            using var saver = new FileStream($"{FilePath}/{file.Name}", FileMode.OpenOrCreate);
+            using var saver = new FileStream($"{FilePath}/{file.FileName}", FileMode.OpenOrCreate);
             await file.CopyToAsync(saver);
 
             using var reader = new BinaryReader(saver);
@@ -113,7 +113,7 @@ namespace CustomGenerics.Structures
 
         public async Task DecompressFile(IFormFile file, string name)
         {
-            using var saver = new FileStream($"{FilePath}/{file.Name}", FileMode.OpenOrCreate);
+            using var saver = new FileStream($"{FilePath}/{file.FileName}", FileMode.OpenOrCreate);
             await file.CopyToAsync(saver);
 
             using var reader = new BinaryReader(saver);
