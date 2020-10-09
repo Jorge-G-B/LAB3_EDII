@@ -33,8 +33,18 @@ namespace CustomGenerics.Structures
         {
         }
 
-        public async Task CompressFile(IFormFile file, string name)
+        public async Task CompressFile(string path, IFormFile file, string name)
         {
+            if (System.IO.File.Exists($"{path}/{file.FileName}"))
+            {
+                System.IO.File.Delete($"{path}/{file.FileName}");
+            }
+
+            if (System.IO.File.Exists($"{path}/{name}"))
+            {
+                System.IO.File.Delete($"{path}/{name}");
+            }
+
             using var saver = new FileStream($"{FilePath}/{file.FileName}", FileMode.OpenOrCreate);
             await file.CopyToAsync(saver);
 
@@ -106,7 +116,11 @@ namespace CustomGenerics.Structures
             string savingText = Metadata + FinalText;
             var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
             var writer = new StreamWriter(newFile);
-            writer.Write(savingText);
+            var text2 = savingText.ToCharArray();
+            foreach (var item in text2)
+            {
+                writer.Write(item);
+            }
             writer.Close();
             newFile.Close();
         }
@@ -124,7 +138,7 @@ namespace CustomGenerics.Structures
 
             //read first 2 bytes
             buffer = reader.ReadBytes(2);
-            int differentByteQty = buffer[0];
+            int  differentByteQty = buffer[0];
             int frequencyLength = buffer[1];
             T value = new T();
             HuffmanNode<T> node;
@@ -163,7 +177,7 @@ namespace CustomGenerics.Structures
                         finalText += (char)BytesDictionary.First(x => x.Value.Code == code).Key;
                         code = "";
                         text = text.Remove(0, codeLength);
-                        codeLength = 1;
+                        codeLength = 0;
                     }
                 }
                 if (finalText.Length != BytesCount)
@@ -175,9 +189,19 @@ namespace CustomGenerics.Structures
 
             var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
             var writer = new StreamWriter(newFile);
-            writer.Write(finalText);
             writer.Close();
             newFile.Close();
+        }
+
+        public string DecompressText(string text)
+        {
+            var Decompressiontxt = ByteGenerator.ConvertToBytes(text);
+            string binaryText = "";
+            foreach (var value in Decompressiontxt)
+            {
+                binaryText += FillZero(Convert.ToString(value,2));
+            }
+            return binaryText;
         }
 
         public string CompressText(string text)
@@ -232,17 +256,6 @@ namespace CustomGenerics.Structures
             return savingText;
         }
 
-        public string DecompressText(string text)
-        {
-            var Decompressiontxt = ByteGenerator.ConvertToBytes(text);
-            string binaryText = "";
-            foreach (var value in Decompressiontxt)
-            {
-                binaryText += FillZero(Convert.ToString(value,2));
-            }
-            return binaryText;
-        }
-
         private string FillZero(string text)
         {
             while (text.Length != 8)
@@ -277,10 +290,7 @@ namespace CustomGenerics.Structures
             var text = "";
             foreach (var data in array)
             {
-                if (data != 194)
-                {
-                    text += ConvertToFixedBinary(data, 1);
-                }
+                text += ConvertToFixedBinary(data, 1);
             }
             return text;
         }

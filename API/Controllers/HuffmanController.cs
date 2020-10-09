@@ -57,8 +57,8 @@ namespace API.Controllers
         [Route("decompress")]
         public async Task<IActionResult> PostDecompress([FromForm] IFormFile file)
         {
-            try
-            {
+            // try
+            // {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
                 HuffmanCom.LoadHistList(Environment.ContentRootPath);
                 var name = "";
@@ -71,11 +71,11 @@ namespace API.Controllers
                 }
                 await Storage.Instance.HuffmanTree.DecompressFile(file, name);
                 return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, ".txt"); 
-            }
-            catch
-            {
-                return StatusCode(500); 
-            }
+            // }
+            // catch
+            // {
+            //     return StatusCode(500); 
+            // }
         }
 
         // POST api/<HuffmanController>
@@ -85,15 +85,10 @@ namespace API.Controllers
         {
             try
             {
-                Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
-                if (System.IO.File.Exists($"{Environment.ContentRootPath}/{file.FileName}"))
-                {
-                    System.IO.File.Delete($"{Environment.ContentRootPath}/{file.FileName}");
-                }
-                
-                await Storage.Instance.HuffmanTree.CompressFile(file, name);
+                Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");                
+                await Storage.Instance.HuffmanTree.CompressFile(Environment.ContentRootPath, file, name);
                 var HuffmanInfo = new HuffmanCom();
-                HuffmanInfo.SetAttributes(Environment.ContentRootPath, file.Name, name);
+                HuffmanInfo.SetAttributes(Environment.ContentRootPath, file.FileName, name);
                 
                 Storage.Instance.HistoryList.Add(HuffmanInfo);
                 
