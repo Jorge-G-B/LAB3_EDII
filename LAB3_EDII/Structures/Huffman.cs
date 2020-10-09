@@ -166,44 +166,18 @@ namespace CustomGenerics.Structures
                 BytesDictionary[byteData].Value.AddFrecuency();
                 value = new T();
             }
-            var BytesCount = 0.00;
-            foreach (var Nodes in BytesDictionary.Values)
-            {
-                BytesCount += Nodes.Value.GetFrequency();
-            }
-
-            PriorityQueue<HuffmanNode<T>> priorityQueue = new PriorityQueue<HuffmanNode<T>>();
-
-            foreach (var Nodes in BytesDictionary.Values)
-            {
-                Nodes.Value.CalculateProbability(BytesCount);
-                priorityQueue.AddValue(Nodes, Nodes.Value.GetProbability());
-            }
-            
-            while (priorityQueue.DataNumber != 1)
-            {
-                T NewNodeValue = new T();
-                var Node1 = priorityQueue.GetFirst();
-                var Node2 = priorityQueue.GetFirst();
-                NewNodeValue.SetProbability(Node1.Value.GetProbability() + Node2.Value.GetProbability());
-                var NewNode = new HuffmanNode<T>(NewNodeValue);
-                Node1.Father = NewNode;
-                Node2.Father = NewNode;
-                if (Node1.Value.GetProbability() < Node2.Value.GetProbability())
-                {
-                    NewNode.Leftson = Node2;
-                    NewNode.Rightson = Node1;
-                }
-                else
-                {
-                    NewNode.Rightson = Node2;
-                    NewNode.Leftson = Node1;
-                }
-                priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
-                Root = NewNode;
-            }
+            BuildHuffmanTree();
             SetCode(Root, "");
             string FinalText = "";
+            string Metadata = "";
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(BytesDictionary.Values.Count, 1)); // Convertir este número a su representación en ascii
+            int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
+            var intBytes = ConvertToBinary(maxValue).Length / 8;
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(intBytes, 1));
+            foreach (var byteObject in BytesDictionary.Values)
+            {
+                Metadata += ByteGenerator.ConvertToString(new byte[] { byteObject.Value.GetValue() }) + ByteGenerator.ConvertToString(GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes));
+            }
             foreach (var byteData in buffer)
             {
                 FinalText += BytesDictionary[byteData].Code;
@@ -221,7 +195,8 @@ namespace CustomGenerics.Structures
                 bytes[0] = Convert.ToByte(byteData, 2);
                 FinalText += ByteGenerator.ConvertToString(bytes);
             }
-            return FinalText;
+            string savingText = Metadata + FinalText;
+            return savingText;
         }
 
         public string DecompressText(string text)
