@@ -14,9 +14,9 @@ namespace API.Models_
 
         public HuffmanChar() { }
 
-        public void AddFrecuency()
+        public void AddFrecuency(int num)
         {
-            Frequency++;
+            Frequency += num;
         }
 
         public void CalculateProbability(double totalBytes)
