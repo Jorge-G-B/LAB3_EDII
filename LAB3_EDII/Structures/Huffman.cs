@@ -192,7 +192,7 @@ namespace CustomGenerics.Structures
             foreach (var byteData in stringBytes)
             {
                 bytes[0] = Convert.ToByte(byteData, 2);
-                FinalText += Encoding.UTF8.GetString(bytes);
+                FinalText += ByteGenerator.ConvertToString(bytes);
             }
             return FinalText;
         }

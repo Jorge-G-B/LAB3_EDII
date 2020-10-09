@@ -6,14 +6,16 @@ namespace CustomGenerics.Utilities
 {
     class ByteGenerator
     {
+        static Encoding e = Encoding.GetEncoding("iso-8859-1");
         public static byte[] ConvertToBytes(string text)
         {
-            return Encoding.ASCII.GetBytes(text);
+            return e.GetBytes(text);
         }
 
         public static string ConvertToString(byte[] bytes)
         {
-            return Encoding.ASCII.GetString(bytes);
+            return e.GetString(bytes);
+
         }
     }
 }
