@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\API\API.csproj" />
     <ProjectReference Include="..\LAB3_EDII\CustomGenerics.csproj" />
   </ItemGroup>
 

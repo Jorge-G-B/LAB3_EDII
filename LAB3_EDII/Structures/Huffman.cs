@@ -1,19 +1,320 @@
-﻿using System;
+﻿using CustomGenerics.Utilities;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.MemoryMappedFiles;
+using System.Linq;
+using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace CustomGenerics.Structures
 {
-    class Huffman : ICompressor
+    public class Huffman<T> : ICompressor where T : IProbability, new()
     {
-        public void Compress()
+        #region Variables
+        HuffmanNode<T> Root;
+        public int NextId = 1;
+        string FilePath;
+        Dictionary<byte, HuffmanNode<T>> BytesDictionary;
+        PriorityQueue<HuffmanNode<T>> priorityQueue;
+        double BytesCount;
+        #endregion
+
+        public Huffman(string filePath)
         {
-            throw new NotImplementedException();
+            FilePath = filePath;
+        }
+        public Huffman()
+        {
         }
 
-        public void Decompress()
+        public async Task CompressFile(IFormFile file, string name)
         {
-            throw new NotImplementedException();
+            using var saver = new FileStream($"{FilePath}/{file.Name}", FileMode.OpenOrCreate);
+            await file.CopyToAsync(saver);
+
+            using var reader = new BinaryReader(saver);
+            int bufferSize = 2000000;
+            var buffer = new byte[bufferSize];
+            BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+            saver.Position = saver.Seek(0, SeekOrigin.Begin);
+
+            while (saver.Position != saver.Length)
+            {
+                buffer = reader.ReadBytes(bufferSize);
+                T value = new T();
+                HuffmanNode<T> Node;
+                foreach (var byteData in buffer)
+                {
+                    if (!BytesDictionary.ContainsKey(byteData))
+                    {
+                        value.SetByte(byteData);
+                        Node = new HuffmanNode<T>(value);
+                        BytesDictionary.Add(byteData, Node);
+                    }
+                    BytesDictionary[byteData].Value.AddFrecuency();
+                    value = new T();
+                }
+            }
+
+            BuildHuffmanTree();
+
+                
+            SetCode(Root, "");
+            //Ir leyendo el texto y transformarlo hacia el nuevo código.
+            string FinalText = "";
+            string Metadata = "";
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(BytesDictionary.Values.Count, 1)); // Convertir este número a su representación en ascii
+            int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
+            var intBytes = ConvertToBinary(maxValue).Length / 8;
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(intBytes, 1));
+            foreach (var byteObject in BytesDictionary.Values)
+            {
+                Metadata += ByteGenerator.ConvertToString(new byte[] { byteObject.Value.GetValue() }) + ByteGenerator.ConvertToString(GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes));
+            }
+            //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
+
+            saver.Position = saver.Seek(0, SeekOrigin.Begin);
+            while (saver.Position != saver.Length)
+            {
+                buffer = reader.ReadBytes(bufferSize);
+                foreach (var byteData in buffer)
+                {
+                    FinalText += BytesDictionary[byteData].Code;
+                }
+            }
+            saver.Close();
+
+            while (FinalText.Length % 8 != 0)
+            {
+                FinalText += "0";
+            }
+
+            var stringBytes = (from Match m in Regex.Matches(FinalText, @"\d{8}") select m.Value).ToList();
+            FinalText = "";
+            byte[] bytes = new byte[1];
+            foreach (var byteData in stringBytes)
+            {
+                bytes[0] = Convert.ToByte(byteData, 2);
+                FinalText += ByteGenerator.ConvertToString(bytes);
+            }
+
+            string savingText = Metadata + FinalText;
+            var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
+            var writer = new BinaryWriter(newFile);
+            writer.Write(savingText);
+            newFile.Close();
+            writer.Close();
+        }
+
+        public async Task DecompressFile(IFormFile file, string name)
+        {
+            using var saver = new FileStream($"{FilePath}/{file.Name}", FileMode.OpenOrCreate);
+            await file.CopyToAsync(saver);
+
+            using var reader = new BinaryReader(saver);
+            int bufferSize = 2000000;
+            var buffer = new byte[bufferSize];
+            BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+            saver.Position = saver.Seek(0, SeekOrigin.Begin);
+
+            //read first 2 bytes
+            buffer = reader.ReadBytes(2);
+            int differentByteQty = buffer[1];
+            int frequencyLength = buffer[2];
+
+            while (saver.Position != saver.Length)
+            {
+                buffer = reader.ReadBytes(bufferSize);
+                T value = new T();
+                HuffmanNode<T> Node;
+                foreach (var byteData in buffer)
+                {
+                    if (!BytesDictionary.ContainsKey(byteData))
+                    {
+                        value.SetByte(byteData);
+                        Node = new HuffmanNode<T>(value);
+                        BytesDictionary.Add(byteData, Node);
+                    }
+                    BytesDictionary[byteData].Value.AddFrecuency();
+                    value = new T();
+                }
+            }
+        }
+
+        public string CompressText(string text)
+        {
+            int bufferSize = 2000000;
+            var buffer = new byte[bufferSize];
+            BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+            buffer = ByteGenerator.ConvertToBytes(text);
+            T value = new T();
+            HuffmanNode<T> Node;
+            foreach (var byteData in buffer)
+            {
+                if (!BytesDictionary.ContainsKey(byteData))
+                {
+                    value.SetByte(byteData);
+                    Node = new HuffmanNode<T>(value);
+                    BytesDictionary.Add(byteData, Node);
+                }
+                BytesDictionary[byteData].Value.AddFrecuency();
+                value = new T();
+            }
+            BuildHuffmanTree();
+            SetCode(Root, "");
+            string FinalText = "";
+            string Metadata = "";
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(BytesDictionary.Values.Count, 1)); // Convertir este número a su representación en ascii
+            int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
+            var intBytes = ConvertToBinary(maxValue).Length / 8;
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(intBytes, 1));
+            foreach (var byteObject in BytesDictionary.Values)
+            {
+                Metadata += ByteGenerator.ConvertToString(new byte[] { byteObject.Value.GetValue() }) + ByteGenerator.ConvertToString(GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes));
+            }
+            foreach (var byteData in buffer)
+            {
+                FinalText += BytesDictionary[byteData].Code;
+            }
+            while (FinalText.Length % 8 != 0)
+            {
+                FinalText += "0";
+            }
+
+            var stringBytes = (from Match m in Regex.Matches(FinalText, @"\d{8}") select m.Value).ToList();
+            FinalText = "";
+            byte[] bytes = new byte[1];
+            foreach (var byteData in stringBytes)
+            {
+                bytes[0] = Convert.ToByte(byteData, 2);
+                FinalText += ByteGenerator.ConvertToString(bytes);
+            }
+            string savingText = Metadata + FinalText;
+            return savingText;
+        }
+
+        public string DecompressText(string text)
+        {
+            var Decompressiontxt = ByteGenerator.ConvertToBytes(text);
+            string binaryText = "";
+            foreach (var value in Decompressiontxt)
+            {
+                binaryText += Convert.ToString(value,2);
+            }
+
+            string binary = ConvertToBinary(3);
+            return binaryText;
+        }
+
+        private string ConvertToBinary(int number)
+        {
+            string value = Convert.ToString(number, 2);
+            while (value.Length % 8 != 0)
+            {
+                value = "0" + value;
+            }
+            return value;
+        }
+
+        private string ConvertToFixedBinary(int number, int byteQty)
+        {
+            string value = Convert.ToString(number, 2);
+            while (value.Length % 8 != 0 || value.Length / 8 != byteQty)
+            {
+                value = "0" + value;
+            }
+            return value;
+        }
+
+        private byte[] GetBytesFromInt(int number, int byteQty)
+        {
+            string text = ConvertToFixedBinary(number, byteQty);
+            var stringBytes = (from Match m in Regex.Matches(text, @"\d{8}") select m.Value).ToList();
+            byte[] byteArray = new byte[stringBytes.Count];
+            for (int i = 0; i < byteArray.Length; i++)
+            {
+                byteArray[i] = Convert.ToByte(stringBytes[i], 2);
+            }
+            return byteArray;
+        }
+
+        private void SetCode(HuffmanNode<T> node, string prevCode)
+        {
+            if (node.Father != null)
+            {
+                if (node.Father.Leftson == node)
+                {
+                    node.Code = $"{prevCode}0";
+                }
+                else
+                {
+                    node.Code = $"{prevCode}1";
+                }
+                if (BytesDictionary.ContainsKey(node.Value.GetValue()))
+                {
+                    BytesDictionary[node.Value.GetValue()].Code = node.Code;
+                }
+            }
+            else
+            {
+                node.Code = "";
+            }
+
+            if (node.Leftson != null)
+            {
+                SetCode(node.Leftson, node.Code);
+            }
+
+            if (node.Rightson != null)
+            {
+                SetCode(node.Rightson, node.Code);
+            }
+        }
+
+        private void BuildHuffmanTree()
+        {
+            BytesCount = 0.00;
+            foreach (var Node in BytesDictionary.Values)
+            {
+                BytesCount += Node.Value.GetFrequency();
+            }
+
+            priorityQueue = new PriorityQueue<HuffmanNode<T>>();
+
+            foreach (var Node in BytesDictionary.Values)
+            {
+                Node.Value.CalculateProbability(BytesCount);
+                priorityQueue.AddValue(Node, Node.Value.GetProbability());
+            }
+
+            T NewNodeValue = new T();
+            while (priorityQueue.DataNumber != 1)
+            {
+                var Node1 = priorityQueue.GetFirst();
+                var Node2 = priorityQueue.GetFirst();
+                NewNodeValue.SetProbability(Node1.Value.GetProbability() + Node2.Value.GetProbability());
+                var NewNode = new HuffmanNode<T>(NewNodeValue);
+                Node1.Father = NewNode;
+                Node2.Father = NewNode;
+                if (Node1.Value.GetProbability() < Node2.Value.GetProbability())
+                {
+                    NewNode.Leftson = Node2;
+                    NewNode.Rightson = Node1;
+                }
+                else
+                {
+                    NewNode.Rightson = Node2;
+                    NewNode.Leftson = Node1;
+                }
+                priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
+                Root = NewNode;
+            }
         }
     }
 }

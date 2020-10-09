@@ -8,7 +8,7 @@ namespace CustomGenerics.Structures
     public class PriorityQueue<T>
     {
         PQNode<T> Root;
-        int DataNumber;
+        public int DataNumber;
 
         public PriorityQueue()
         {
@@ -96,11 +96,11 @@ namespace CustomGenerics.Structures
         #endregion
 
         #region Pop
-        private PQNode<T> GetFirst()
+        public T GetFirst()
         {
             if (Root == null)
             {
-                return null;
+                return default;
             }
             PQNode<T> LastNode = new PQNode<T>();
             LastNode = SearchLastNode(Root, 1);
@@ -112,7 +112,7 @@ namespace CustomGenerics.Structures
             {
                 Root = null;
                 DataNumber--;
-                return LastNode;
+                return LastNodeCopy.Value;
             }
             else
             {
@@ -127,7 +127,7 @@ namespace CustomGenerics.Structures
             }
             OrderUpToDown(Root);
             DataNumber--;
-            return FirstNode;
+            return FirstNode.Value;
         }
         #endregion
 
