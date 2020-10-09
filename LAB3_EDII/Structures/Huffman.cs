@@ -24,6 +24,8 @@ namespace CustomGenerics.Structures
         string DestinyFileName;
         string OriginFileName;
         Dictionary<byte, HuffmanNode<T>> BytesDictionary;
+        PriorityQueue<HuffmanNode<T>> priorityQueue;
+        double BytesCount;
         #endregion
 
         public Huffman(string filePath)
@@ -64,44 +66,7 @@ namespace CustomGenerics.Structures
                 }
             }
 
-            double BytesCount = 0.00;
-            foreach (var Node in BytesDictionary.Values)
-            {
-                BytesCount += Node.Value.GetFrequency();
-            }
-
-            PriorityQueue<HuffmanNode<T>> priorityQueue = new PriorityQueue<HuffmanNode<T>>();
-
-            foreach (var Node in BytesDictionary.Values)
-            {
-                Node.Value.CalculateProbability(BytesCount);
-                priorityQueue.AddValue(Node, Node.Value.GetProbability());
-            }
-
-            T NewNodeValue = new T();
-            while (priorityQueue.DataNumber != 1)
-            {
-                var Node1 = priorityQueue.GetFirst();
-                var Node2 = priorityQueue.GetFirst();
-                NewNodeValue.SetProbability(Node1.Value.GetProbability() + Node2.Value.GetProbability());
-                var NewNode = new HuffmanNode<T>(NewNodeValue);
-                Node1.Father = NewNode;
-                Node2.Father = NewNode;
-                if (Node1.Value.GetProbability() < Node2.Value.GetProbability())
-                {
-                    NewNode.Leftson = Node2;
-                    NewNode.Rightson = Node1;
-                }
-                else
-                {
-                    NewNode.Rightson = Node2;
-                    NewNode.Leftson = Node1;
-                }
-                priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
-                Root = NewNode;
-            }
-
-
+            BuildHuffmanTree();
                 
             SetCode(Root, "");
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
@@ -132,7 +97,7 @@ namespace CustomGenerics.Structures
                 FinalText += "0";
             }
 
-            var stringBytes = Enumerable.Range(0, FinalText.Length / 8).Select(x => FinalText.Substring(x * 8, 8));
+            var stringBytes = (from Match m in Regex.Matches(FinalText, @"\d{8}") select m.Value).ToList();
             FinalText = "";
             byte[] bytes = new byte[1];
             foreach (var byteData in stringBytes)
@@ -289,6 +254,46 @@ namespace CustomGenerics.Structures
             else
             {
                 return Encoding.ASCII.GetString(array);
+            }
+        }
+
+        private void BuildHuffmanTree()
+        {
+            BytesCount = 0.00;
+            foreach (var Node in BytesDictionary.Values)
+            {
+                BytesCount += Node.Value.GetFrequency();
+            }
+
+            priorityQueue = new PriorityQueue<HuffmanNode<T>>();
+
+            foreach (var Node in BytesDictionary.Values)
+            {
+                Node.Value.CalculateProbability(BytesCount);
+                priorityQueue.AddValue(Node, Node.Value.GetProbability());
+            }
+
+            T NewNodeValue = new T();
+            while (priorityQueue.DataNumber != 1)
+            {
+                var Node1 = priorityQueue.GetFirst();
+                var Node2 = priorityQueue.GetFirst();
+                NewNodeValue.SetProbability(Node1.Value.GetProbability() + Node2.Value.GetProbability());
+                var NewNode = new HuffmanNode<T>(NewNodeValue);
+                Node1.Father = NewNode;
+                Node2.Father = NewNode;
+                if (Node1.Value.GetProbability() < Node2.Value.GetProbability())
+                {
+                    NewNode.Leftson = Node2;
+                    NewNode.Rightson = Node1;
+                }
+                else
+                {
+                    NewNode.Rightson = Node2;
+                    NewNode.Leftson = Node1;
+                }
+                priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
+                Root = NewNode;
             }
         }
     }

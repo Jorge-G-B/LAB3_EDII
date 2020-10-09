@@ -31,12 +31,6 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public List<HuffmanCom> GetHuffmanComs()
-        {
-            return new List<HuffmanCom>();
-        }
-
-        [HttpGet]
         public IEnumerable<string> TryGet()
         {
             return new string[] { "value1", "value2" };
@@ -84,6 +78,7 @@ namespace API.Controllers
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
                 using var saver = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
                 await file.CopyToAsync(saver);
+                saver.Close();
                 var CountBytesO = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{file.Name}");
                 int BNO = CountBytesO.Count();
                 
@@ -91,6 +86,7 @@ namespace API.Controllers
                 
                 using var saver2 = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
                 await file.CopyToAsync(saver);
+                saver2.Close();
                 var CountBytesC = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{name}");
                 int BNC = CountBytesO.Count();
 
