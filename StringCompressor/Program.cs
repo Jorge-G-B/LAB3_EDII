@@ -24,14 +24,16 @@ namespace StringCompressor
                 Console.WriteLine("El resultado de la compresión es el siguiente:");
                 Console.WriteLine(CompressedText);
                 Console.WriteLine("¿Desea descomprimirlo? | Presione 'Y'. De lo contrario, presione cualquier otra tecla.");
-                if (Console.ReadKey().Key != ConsoleKey.Y)
+                if (Console.ReadKey().Key == ConsoleKey.Y)
                 {
-                    //Descomprimiento
+                    Console.Clear();
+                    string originaltext = Huff.DecompressText(CompressedText);
                     Console.WriteLine("El resultado de la descompresión es el siguiente:");
-                    //Texto descomprimido
+                    Console.WriteLine(originaltext);
+                    Console.ReadLine();
                 }
                 Console.WriteLine("Feliz día!");
-                
+                Console.ReadLine();
 
             }
             catch

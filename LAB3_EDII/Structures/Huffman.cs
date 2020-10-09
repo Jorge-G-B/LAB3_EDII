@@ -67,6 +67,7 @@ namespace CustomGenerics.Structures
             }
 
             BuildHuffmanTree();
+
                 
             SetCode(Root, "");
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
@@ -198,7 +199,20 @@ namespace CustomGenerics.Structures
 
         public string DecompressText(string text)
         {
-            throw new NotImplementedException();
+            var Decompressiontxt = ByteGenerator.ConvertToBytes(text);
+            string binaryText = "";
+            foreach (var value in Decompressiontxt)
+            {
+                binaryText += Convert.ToString(value,2);
+            }
+
+            string binary = ConverttoBinary(3);
+            return binaryText;
+        }
+
+        public string ConverttoBinary(int number)
+        {
+            return (Convert.ToString(number,2));
         }
 
         private void SetCode(HuffmanNode<T> node, string prevCode)
