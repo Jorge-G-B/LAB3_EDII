@@ -59,6 +59,7 @@ namespace API.Controllers
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
+                HuffmanCom.LoadHistList(Environment.ContentRootPath);
                 var name = "";
                 foreach (var item in Storage.Instance.HistoryList)
                 {
@@ -88,23 +89,12 @@ namespace API.Controllers
                 {
                     System.IO.File.Delete($"{Environment.ContentRootPath}/{file.Name}");
                 }
-                using var saver = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
-                await file.CopyToAsync(saver);
-                saver.Close();
-                var CountBytesO = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{file.Name}");
-                int BNO = CountBytesO.Count();
                 
                 await Storage.Instance.HuffmanTree.CompressFile(file, name);
-                
-                var CountBytesC = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{name}");
-                int BNC = CountBytesC.Count();
 
                 var HuffmanInfo = new HuffmanCom();
-                HuffmanInfo.OriginalName = file.FileName;
-                HuffmanInfo.CompressedName = name;
-                HuffmanInfo.GetRatio(BNC, BNO);
-                HuffmanInfo.GetFactor(BNC, BNO);
-                HuffmanInfo.RPercentage();
+                HuffmanInfo.SetAttributes(Environment.ContentRootPath, file.Name, name);
+                
                 Storage.Instance.HistoryList.Add(HuffmanInfo);
                 
                 return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, $"{name}.huff");
