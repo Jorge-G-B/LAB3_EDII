@@ -69,13 +69,13 @@ namespace CustomGenerics.Structures
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
             string FinalText = "";
             string Metadata = "";
-            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(BytesDictionary.Values.Count, 1)); // Convertir este número a su representación en ascii
+            Metadata += StringFromBytes((GetBytesFromInt(BytesDictionary.Values.Count, 1))); // Convertir este número a su representación en ascii
             int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
             var intBytes = ConvertToBinary(maxValue).Length / 8;
-            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(intBytes, 1));
+            Metadata += StringFromBytes((GetBytesFromInt(intBytes, 1)));
             foreach (var byteObject in BytesDictionary.Values)
             {
-                Metadata += ByteGenerator.ConvertToString(new byte[] { byteObject.Value.GetValue() }) + ByteGenerator.ConvertToString(GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes));
+                Metadata += (char)byteObject.Value.GetValue() + StringFromBytes((GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes)));
             }
             //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
 
@@ -100,13 +100,12 @@ namespace CustomGenerics.Structures
             byte[] bytes = new byte[1];
             foreach (var byteData in stringBytes)
             {
-                bytes[0] = Convert.ToByte(byteData, 2);
-                FinalText += ByteGenerator.ConvertToString(bytes);
+                FinalText += (char)Convert.ToByte(byteData, 2);
             }   
 
             string savingText = Metadata + FinalText;
             var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
-            var writer = new BinaryWriter(newFile);
+            var writer = new StreamWriter(newFile);
             writer.Write(savingText);
             writer.Close();
             newFile.Close();
@@ -124,7 +123,6 @@ namespace CustomGenerics.Structures
             saver.Position = saver.Seek(0, SeekOrigin.Begin);
 
             //read first 2 bytes
-            buffer = reader.ReadBytes(1);
             buffer = reader.ReadBytes(2);
             int differentByteQty = buffer[0];
             int frequencyLength = buffer[1];
@@ -162,7 +160,7 @@ namespace CustomGenerics.Structures
                 {
                     if (data.Code == code)
                     {
-                        finalText += ByteGenerator.ConvertToString(new byte[] { BytesDictionary.First(x => x.Value.Code == code).Key });
+                        finalText += (char)BytesDictionary.First(x => x.Value.Code == code).Key;
                         code = "";
                         text = text.Remove(0, codeLength);
                         codeLength = 1;
@@ -176,7 +174,7 @@ namespace CustomGenerics.Structures
             }
 
             var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
-            var writer = new BinaryWriter(newFile);
+            var writer = new StreamWriter(newFile);
             writer.Write(finalText);
             writer.Close();
             newFile.Close();
@@ -279,7 +277,10 @@ namespace CustomGenerics.Structures
             var text = "";
             foreach (var data in array)
             {
-                text += ConvertToFixedBinary(data, 1);
+                if (data != 194)
+                {
+                    text += ConvertToFixedBinary(data, 1);
+                }
             }
             return text;
         }
@@ -372,6 +373,16 @@ namespace CustomGenerics.Structures
                 Root = NewNode;
                 NewNodeValue = new T();
             }
+        }
+
+        private string StringFromBytes(byte[] array)
+        {
+            var result = "";
+            foreach (var item in array)
+            {
+                result += (char)item;
+            }
+            return result;
         }
     }
 }
