@@ -69,7 +69,7 @@ namespace API.Controllers
                     }
                 }
                 await Storage.Instance.HuffmanTree.DecompressFile(file, name);
-                return PhysicalFile($"{Environment.ContentRootPath}/{name}", ".txt"); 
+                return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, ".txt"); 
             }
             catch
             {

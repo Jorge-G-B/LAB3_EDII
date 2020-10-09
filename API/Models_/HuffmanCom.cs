@@ -39,7 +39,7 @@ namespace API.Models_
             Storage.Instance.HistoryList.Add(this);
             var file = new FileStream($"{path}/CompressionHist", FileMode.OpenOrCreate);
             var BytesToWrite = JsonSerializer.Serialize(Storage.Instance.HistoryList, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-            using var writer = new BinaryWriter(file);
+            using var writer = new StreamWriter(file);
             writer.Write(BytesToWrite);
             writer.Close();
             file.Close();
@@ -47,13 +47,12 @@ namespace API.Models_
 
         public static void LoadHistList(string path)
         {
-            using var content = new MemoryStream();
             var file = new FileStream($"{path}/CompressionHist", FileMode.OpenOrCreate);
             if (file.Length != 0)
             {
-                file.CopyToAsync(content);
-                var text = Encoding.ASCII.GetString(content.ToArray());
-                var list = JsonSerializer.Deserialize<List<HuffmanCom>>(text, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                using var reader = new StreamReader(file);
+                var content = reader.ReadToEnd();
+                var list = JsonSerializer.Deserialize<List<HuffmanCom>>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                 foreach (var item in list)
                 {
                     Storage.Instance.HistoryList.Add(item);

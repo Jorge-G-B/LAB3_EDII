@@ -15,7 +15,6 @@ namespace CustomGenerics.Utilities
         public static string ConvertToString(byte[] bytes)
         {
             return e.GetString(bytes);
-
         }
     }
 }

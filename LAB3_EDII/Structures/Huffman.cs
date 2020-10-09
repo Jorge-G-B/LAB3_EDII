@@ -102,14 +102,14 @@ namespace CustomGenerics.Structures
             {
                 bytes[0] = Convert.ToByte(byteData, 2);
                 FinalText += ByteGenerator.ConvertToString(bytes);
-            }
+            }   
 
             string savingText = Metadata + FinalText;
             var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
-            var writer = new BinaryWriter(newFile);
+            var writer = new StreamWriter(newFile);
             writer.Write(savingText);
-            newFile.Close();
             writer.Close();
+            newFile.Close();
         }
 
         public async Task DecompressFile(IFormFile file, string name)
@@ -125,25 +125,25 @@ namespace CustomGenerics.Structures
 
             //read first 2 bytes
             buffer = reader.ReadBytes(2);
-            int differentByteQty = buffer[1];
-            int frequencyLength = buffer[2];
+            int differentByteQty = buffer[0];
+            int frequencyLength = buffer[1];
             T value = new T();
             HuffmanNode<T> node;
             BytesCount = 0.00;
             for (int i = 0; i < differentByteQty; i++)
             {
                 buffer = reader.ReadBytes(frequencyLength + 1);
-                value.SetByte(buffer[1]);
+                value.SetByte(buffer[0]);
                 value.AddFrecuency(GetIntFromBytes(buffer));
                 BytesCount += value.GetFrequency();
                 node = new HuffmanNode<T>(value);
-                BytesDictionary.Add(buffer[1], node);
+                BytesDictionary.Add(buffer[0], node);
                 value = new T();
             }
 
             BuildHuffmanTree();
-
             SetCode(Root, "");
+
             var text = "";
             while (saver.Position != saver.Length)
             {
@@ -154,25 +154,31 @@ namespace CustomGenerics.Structures
 
             var code = "";
             var finalText = "";
-            int codeLength = 1;
+            int codeLength = 0;
             while (finalText.Length != BytesCount)
             {
-                while (BytesDictionary.First(x=>x.Value.Code == code).Value == null)
+                foreach (var data in BytesDictionary.Values)
+                {
+                    if (data.Code == code)
+                    {
+                        finalText += ByteGenerator.ConvertToString(new byte[] { BytesDictionary.First(x => x.Value.Code == code).Key });
+                        code = "";
+                        text = text.Remove(0, codeLength);
+                        codeLength = 1;
+                    }
+                }
+                if (finalText.Length != BytesCount)
                 {
                     codeLength++;
                     code = text.Substring(0, codeLength);
                 }
-                finalText += BytesDictionary.First(x => x.Value.Code == code).Key;
-                code = "";
-                text = text.Remove(0, codeLength);
-                codeLength = 1;
             }
 
             var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
             var writer = new BinaryWriter(newFile);
             writer.Write(finalText);
-            newFile.Close();
             writer.Close();
+            newFile.Close();
         }
 
         public string CompressText(string text)
@@ -272,7 +278,7 @@ namespace CustomGenerics.Structures
             var text = "";
             foreach (var data in array)
             {
-                text += Convert.ToString(data, 2);
+                text += ConvertToFixedBinary(data, 1);
             }
             return text;
         }
@@ -363,6 +369,7 @@ namespace CustomGenerics.Structures
                 }
                 priorityQueue.AddValue(NewNode, NewNode.Value.GetProbability());
                 Root = NewNode;
+                NewNodeValue = new T();
             }
         }
     }
