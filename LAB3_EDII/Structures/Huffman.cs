@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -188,6 +189,7 @@ namespace CustomGenerics.Structures
             buffer = ByteGenerator.ConvertToBytes(text);
             T value = new T();
             HuffmanNode<T> Node;
+            BytesCount = 0.00;
             foreach (var byteData in buffer)
             {
                 if (!BytesDictionary.ContainsKey(byteData))
@@ -197,6 +199,7 @@ namespace CustomGenerics.Structures
                     BytesDictionary.Add(byteData, Node);
                 }
                 BytesDictionary[byteData].Value.AddFrecuency(1);
+                BytesCount += 1;
                 value = new T();
             }
             BuildHuffmanTree();
@@ -232,15 +235,67 @@ namespace CustomGenerics.Structures
             return savingText;
         }
 
-        public string DecompressText(string text)
+        public string DecompressText(string Text)
         {
-            var Decompressiontxt = ByteGenerator.ConvertToBytes(text);
-            string binaryText = "";
-            foreach (var value in Decompressiontxt)
+            int bufferSize = 2000000;
+            var buffer = new byte[bufferSize];
+            BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+
+            //read first 2 bytes
+            buffer = ByteGenerator.ConvertToBytes(Text);
+            int differentByteQty = buffer[0];
+            int frequencyLength = buffer[1];
+            T value = new T();
+            HuffmanNode<T> node;
+            BytesCount = 0.00;
+            for (int i = 0; i < differentByteQty; i++)
             {
-                binaryText += FillZero(Convert.ToString(value,2));
+                buffer = ByteGenerator.ConvertToBytes(Text.Substring(2+(i*(frequencyLength + 1)),frequencyLength + 1));
+                value.SetByte(buffer[0]);
+                value.AddFrecuency(GetIntFromBytes(buffer));
+                BytesCount += value.GetFrequency();
+                node = new HuffmanNode<T>(value);
+                BytesDictionary.Add(buffer[0], node);
+                value = new T();
             }
-            return binaryText;
+
+            BuildHuffmanTree();
+
+            SetCode(Root, "");
+            var text = "";
+            buffer = ByteGenerator.ConvertToBytes(Text.Substring(2+(differentByteQty*(frequencyLength + 1)),Text.Length- (2 + (differentByteQty * (frequencyLength + 1)))));
+            text += ConvertFromBytesToBinary(buffer);
+
+            var code = "";
+            var finalText = "";
+            int codeLength = 0;
+            byte[] bytes = new byte[1];
+            bool flag = true;
+            while (finalText.Length != BytesCount)
+            {
+                while (flag)
+                {
+                    foreach (var character in BytesDictionary)
+                    {
+                        if (character.Value.Code == code)
+                        {
+                            bytes[0] = character.Key;
+                            finalText += ByteGenerator.ConvertToString(bytes);
+                            flag = false;
+                        }
+                    }
+                    if (flag)
+                    {
+                        codeLength++;
+                        code = text.Substring(0, codeLength);
+                    }
+                }
+                flag = true;
+                code = "";
+                text = text.Remove(0, codeLength);
+                codeLength = 0;
+            }
+            return finalText;
         }
 
         private string FillZero(string text)

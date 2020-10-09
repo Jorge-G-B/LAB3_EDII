@@ -43,8 +43,8 @@ namespace StringCompressor
                 Console.Clear();
                 //goto Insert;
 
-            }              
-                
+            }
+
         }
     }
 }
