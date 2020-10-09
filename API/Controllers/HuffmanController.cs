@@ -38,9 +38,10 @@ namespace API.Controllers
 
         // GET: api/<HuffmanController>
         [HttpGet]
-        [Route("api/compressions")]
-        public List<HuffmanCom> GetLCompress([FromForm] IFormFile file)
+        [Route("compressions")]
+        public List<HuffmanCom> GetListCompress()
         {
+            HuffmanCom.LoadHistList(Environment.ContentRootPath);
             return Storage.Instance.HistoryList;
         }
 
@@ -85,13 +86,12 @@ namespace API.Controllers
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
-                if (System.IO.File.Exists($"{Environment.ContentRootPath}/{file.Name}"))
+                if (System.IO.File.Exists($"{Environment.ContentRootPath}/{file.FileName}"))
                 {
-                    System.IO.File.Delete($"{Environment.ContentRootPath}/{file.Name}");
+                    System.IO.File.Delete($"{Environment.ContentRootPath}/{file.FileName}");
                 }
                 
                 await Storage.Instance.HuffmanTree.CompressFile(file, name);
-
                 var HuffmanInfo = new HuffmanCom();
                 HuffmanInfo.SetAttributes(Environment.ContentRootPath, file.Name, name);
                 
