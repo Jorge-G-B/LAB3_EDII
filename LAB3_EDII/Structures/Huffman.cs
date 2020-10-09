@@ -205,11 +205,18 @@ namespace CustomGenerics.Structures
             string binaryText = "";
             foreach (var value in Decompressiontxt)
             {
-                binaryText += Convert.ToString(value,2);
+                binaryText += FillZero(Convert.ToString(value,2));
             }
-
-            string binary = ConvertToBinary(3);
             return binaryText;
+        }
+
+        private string FillZero(string text)
+        {
+            while (text.Length != 8)
+            {
+                text = "0" + text;
+            }
+            return text;
         }
 
         private string ConvertToBinary(int number)
