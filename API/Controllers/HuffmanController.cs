@@ -12,6 +12,8 @@ using CustomGenerics.Structures;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
+using System.ComponentModel;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -29,6 +31,12 @@ namespace API.Controllers
         }
 
         [HttpGet]
+        public List<HuffmanCom> GetHuffmanComs()
+        {
+            return new List<HuffmanCom>();
+        }
+
+        [HttpGet]
         public IEnumerable<string> TryGet()
         {
             return new string[] { "value1", "value2" };
@@ -37,9 +45,9 @@ namespace API.Controllers
         // GET: api/<HuffmanController>
         [HttpGet]
         [Route("api/compressions")]
-        public IEnumerable<string> Get()
+        public List<HuffmanCom> GetLCompress([FromForm] IFormFile file)
         {
-            return new string[] { "value1", "value2" };
+            return Storage.Instance.HistoryList;
         }
 
         // GET api/<HuffmanController>/5
@@ -56,7 +64,9 @@ namespace API.Controllers
         {
             try
             {
-                return Ok();
+                Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
+                Storage.Instance.HuffmanTree.DecompressFile(file);
+                return PhysicalFile($"{Environment.ContentRootPath}/{file.Name}Decompressed", ".txt"); 
             }
             catch
             {
@@ -67,23 +77,35 @@ namespace API.Controllers
         // POST api/<HuffmanController>
         [HttpPost]
         [Route("compress/{name}")]
-        public IActionResult PostHuffman([FromForm] IFormFile file, string name)
+        public async Task<IActionResult> PostHuffmanAsync([FromForm] IFormFile file, string name)
         {
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
-                var filepath = Storage.Instance.HuffmanTree.CompressFile(file);
-                return PhysicalFile(filepath, MediaTypeNames.Text.Plain, $"{name}.huff");
+                using var saver = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
+                await file.CopyToAsync(saver);
+                var CountBytesO = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{file.Name}");
+                int BNO = CountBytesO.Count();
+                
+                Storage.Instance.HuffmanTree.CompressFile(file, name);
+                
+                using var saver2 = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
+                await file.CopyToAsync(saver);
+                var CountBytesC = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{name}");
+                int BNC = CountBytesO.Count();
+
+                var HuffmanInfo = new HuffmanCom();
+                HuffmanInfo.GetRatio(BNC, BNO);
+                HuffmanInfo.GetFactor(BNC, BNO);
+                HuffmanInfo.RPercentage();
+                Storage.Instance.HistoryList.Add(HuffmanInfo);
+                
+                return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, $"{name}.huff");
             }
             catch
             {
                 return StatusCode(500);
             }
-        }
-
-        private IActionResult PhysicalFile(Task<string> filepath, string plain, object p)
-        {
-            throw new NotImplementedException();
         }
     }
 }

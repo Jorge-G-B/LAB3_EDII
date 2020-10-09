@@ -21,5 +21,6 @@ namespace API.Helpers_
             }
         }
         public Huffman<HuffmanChar> HuffmanTree;
+        public List<HuffmanCom> HistoryList;
     }
 }

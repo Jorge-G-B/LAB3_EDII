@@ -34,7 +34,7 @@ namespace CustomGenerics.Structures
         {
         }
 
-        public async Task<string> CompressFile(IFormFile file)
+        public async void CompressFile(IFormFile file, string name)
         {
             OriginFileName = file.FileName;
             using var saver = new FileStream($"{FilePath}/{OriginFileName}", FileMode.OpenOrCreate);
@@ -142,16 +142,14 @@ namespace CustomGenerics.Structures
             }
 
             string savingText = Metadata + FinalText;
-            DestinyFileName = $"Compressed_{file.Name}.huff";
-            var newFile = new FileStream($"{FilePath}/{DestinyFileName}", FileMode.OpenOrCreate);
+            var newFile = new FileStream($"{FilePath}/{name}.huff", FileMode.OpenOrCreate);
             var writer = new BinaryWriter(newFile);
             writer.Write(savingText);
             newFile.Close();
             writer.Close();
-            return $"{FilePath}/{DestinyFileName}";
         }
 
-        public Task<string> DecompressFile(IFormFile file)
+        public async void DecompressFile(IFormFile file)
         {
             throw new NotImplementedException();
         }
