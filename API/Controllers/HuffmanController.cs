@@ -89,7 +89,6 @@ namespace API.Controllers
                 await Storage.Instance.HuffmanTree.CompressFile(Environment.ContentRootPath, file, name);
                 var HuffmanInfo = new HuffmanCom();
                 HuffmanInfo.SetAttributes(Environment.ContentRootPath, file.FileName, name);
-                
                 Storage.Instance.HistoryList.Add(HuffmanInfo);
                 
                 return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, $"{name}.huff");
