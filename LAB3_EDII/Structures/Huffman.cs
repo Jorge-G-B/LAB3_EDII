@@ -69,10 +69,10 @@ namespace CustomGenerics.Structures
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
             string FinalText = "";
             string Metadata = "";
-            Metadata += (char)BytesDictionary.Values.Count; // Convertir este número a su representación en ascii
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(BytesDictionary.Values.Count, 1)); // Convertir este número a su representación en ascii
             int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
             var intBytes = ConvertToBinary(maxValue).Length / 8;
-            Metadata += (char)intBytes;
+            Metadata += ByteGenerator.ConvertToString(GetBytesFromInt(intBytes, 1));
             foreach (var byteObject in BytesDictionary.Values)
             {
                 Metadata += ByteGenerator.ConvertToString(new byte[] { byteObject.Value.GetValue() }) + ByteGenerator.ConvertToString(GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes));
@@ -112,9 +112,39 @@ namespace CustomGenerics.Structures
             writer.Close();
         }
 
-        public async Task DecompressFile(IFormFile file)
+        public async Task DecompressFile(IFormFile file, string name)
         {
-            throw new NotImplementedException();
+            using var saver = new FileStream($"{FilePath}/{file.Name}", FileMode.OpenOrCreate);
+            await file.CopyToAsync(saver);
+
+            using var reader = new BinaryReader(saver);
+            int bufferSize = 2000000;
+            var buffer = new byte[bufferSize];
+            BytesDictionary = new Dictionary<byte, HuffmanNode<T>>();
+            saver.Position = saver.Seek(0, SeekOrigin.Begin);
+
+            //read first 2 bytes
+            buffer = reader.ReadBytes(2);
+            int differentByteQty = buffer[1];
+            int frequencyLength = buffer[2];
+
+            while (saver.Position != saver.Length)
+            {
+                buffer = reader.ReadBytes(bufferSize);
+                T value = new T();
+                HuffmanNode<T> Node;
+                foreach (var byteData in buffer)
+                {
+                    if (!BytesDictionary.ContainsKey(byteData))
+                    {
+                        value.SetByte(byteData);
+                        Node = new HuffmanNode<T>(value);
+                        BytesDictionary.Add(byteData, Node);
+                    }
+                    BytesDictionary[byteData].Value.AddFrecuency();
+                    value = new T();
+                }
+            }
         }
 
         public string CompressText(string text)
@@ -269,29 +299,6 @@ namespace CustomGenerics.Structures
             if (node.Rightson != null)
             {
                 SetCode(node.Rightson, node.Code);
-            }
-        }
-
-        private string GetASCIIChars(byte[] array, int count)
-        {
-            if (array.Length < count)
-            {
-                List<byte> list = new List<byte>();
-                foreach (var value in array)
-                {
-                    list.Add(value);
-                }
-                while (list.Count < count)
-                {
-                    list.Add(default);
-                }
-                string returningString = "";
-                var arrayOfBytes = list.ToArray();
-                return Encoding.ASCII.GetString(arrayOfBytes);
-            }
-            else
-            {
-                return Encoding.ASCII.GetString(array);
             }
         }
 

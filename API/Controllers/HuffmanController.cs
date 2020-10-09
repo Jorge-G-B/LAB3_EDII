@@ -54,12 +54,20 @@ namespace API.Controllers
         // POST api/<HuffmanController>
         [HttpPost]
         [Route("api/decompress")]
-        public IActionResult PostDecompress([FromForm] IFormFile file)
+        public async Task<IActionResult> PostDecompress([FromForm] IFormFile file)
         {
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
-                Storage.Instance.HuffmanTree.DecompressFile(file);
+                var name = "";
+                foreach (var item in Storage.Instance.HistoryList)
+                {
+                    if (item.CompressedName == file.FileName)
+                    {
+                        name = item.OriginalName;
+                    }
+                }
+                await Storage.Instance.HuffmanTree.DecompressFile(file, name);
                 return PhysicalFile($"{Environment.ContentRootPath}/{file.Name}Decompressed", ".txt"); 
             }
             catch
@@ -92,6 +100,8 @@ namespace API.Controllers
                 int BNC = CountBytesC.Count();
 
                 var HuffmanInfo = new HuffmanCom();
+                HuffmanInfo.OriginalName = file.FileName;
+                HuffmanInfo.CompressedName = name;
                 HuffmanInfo.GetRatio(BNC, BNO);
                 HuffmanInfo.GetFactor(BNC, BNO);
                 HuffmanInfo.RPercentage();

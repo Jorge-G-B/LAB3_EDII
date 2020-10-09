@@ -9,15 +9,13 @@ namespace API.Models_
     public class HuffmanCom 
     {
         public string OriginalName { get; set; }
+        public string CompressedName { get; set; }
         public string CompressedFilePath { get; set; }
         public double CompressionRatio { get; set; }
         public double CompressionFactor { get; set; }
         public double ReductionPercentage { get; set; }
 
-        public HuffmanCom()
-        {
-
-        }
+        public HuffmanCom() { }
 
         public void GetRatio(int bNC, int bNO)
         {
