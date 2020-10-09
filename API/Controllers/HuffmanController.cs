@@ -53,7 +53,7 @@ namespace API.Controllers
 
         // POST api/<HuffmanController>
         [HttpPost]
-        [Route("api/decompress")]
+        [Route("decompress")]
         public async Task<IActionResult> PostDecompress([FromForm] IFormFile file)
         {
             try
@@ -68,7 +68,7 @@ namespace API.Controllers
                     }
                 }
                 await Storage.Instance.HuffmanTree.DecompressFile(file, name);
-                return PhysicalFile($"{Environment.ContentRootPath}/{file.Name}Decompressed", ".txt"); 
+                return PhysicalFile($"{Environment.ContentRootPath}/{name}", ".txt"); 
             }
             catch
             {
