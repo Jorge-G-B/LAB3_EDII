@@ -9,7 +9,7 @@ namespace CustomGenerics.Structures
         double GetProbability();
         int GetFrequency();
         byte GetValue();
-        void AddFrecuency();
+        void AddFrecuency(int number);
         void SetByte(byte value);
         void CalculateProbability(double totalBytes);
         void SetProbability(double number);

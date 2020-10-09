@@ -38,9 +38,10 @@ namespace API.Controllers
 
         // GET: api/<HuffmanController>
         [HttpGet]
-        [Route("api/compressions")]
-        public List<HuffmanCom> GetLCompress([FromForm] IFormFile file)
+        [Route("compressions")]
+        public List<HuffmanCom> GetListCompress()
         {
+            HuffmanCom.LoadHistList(Environment.ContentRootPath);
             return Storage.Instance.HistoryList;
         }
 
@@ -53,12 +54,13 @@ namespace API.Controllers
 
         // POST api/<HuffmanController>
         [HttpPost]
-        [Route("api/decompress")]
+        [Route("decompress")]
         public async Task<IActionResult> PostDecompress([FromForm] IFormFile file)
         {
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
+                HuffmanCom.LoadHistList(Environment.ContentRootPath);
                 var name = "";
                 foreach (var item in Storage.Instance.HistoryList)
                 {
@@ -68,7 +70,7 @@ namespace API.Controllers
                     }
                 }
                 await Storage.Instance.HuffmanTree.DecompressFile(file, name);
-                return PhysicalFile($"{Environment.ContentRootPath}/{file.Name}Decompressed", ".txt"); 
+                return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, ".txt"); 
             }
             catch
             {
@@ -84,27 +86,15 @@ namespace API.Controllers
             try
             {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
-                if (System.IO.File.Exists($"{Environment.ContentRootPath}/{file.Name}"))
+                if (System.IO.File.Exists($"{Environment.ContentRootPath}/{file.FileName}"))
                 {
-                    System.IO.File.Delete($"{Environment.ContentRootPath}/{file.Name}");
+                    System.IO.File.Delete($"{Environment.ContentRootPath}/{file.FileName}");
                 }
-                using var saver = new FileStream($"{Environment.ContentRootPath}/{file.Name}", FileMode.OpenOrCreate);
-                await file.CopyToAsync(saver);
-                saver.Close();
-                var CountBytesO = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{file.Name}");
-                int BNO = CountBytesO.Count();
                 
                 await Storage.Instance.HuffmanTree.CompressFile(file, name);
-                
-                var CountBytesC = System.IO.File.ReadAllBytes($"{Environment.ContentRootPath}/{name}");
-                int BNC = CountBytesC.Count();
-
                 var HuffmanInfo = new HuffmanCom();
-                HuffmanInfo.OriginalName = file.FileName;
-                HuffmanInfo.CompressedName = name;
-                HuffmanInfo.GetRatio(BNC, BNO);
-                HuffmanInfo.GetFactor(BNC, BNO);
-                HuffmanInfo.RPercentage();
+                HuffmanInfo.SetAttributes(Environment.ContentRootPath, file.Name, name);
+                
                 Storage.Instance.HistoryList.Add(HuffmanInfo);
                 
                 return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, $"{name}.huff");
