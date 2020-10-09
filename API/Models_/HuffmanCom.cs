@@ -52,6 +52,7 @@ namespace API.Models_
             var file = new FileStream($"{path}/CompressionHist", FileMode.OpenOrCreate);
             if (file.Length != 0)
             {
+                Storage.Instance.HistoryList.Clear();
                 using var reader = new StreamReader(file);
                 var content = reader.ReadToEnd();
                 var list = JsonSerializer.Deserialize<List<HuffmanCom>>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });

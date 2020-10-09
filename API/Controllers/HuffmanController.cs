@@ -38,9 +38,10 @@ namespace API.Controllers
 
         // GET: api/<HuffmanController>
         [HttpGet]
-        [Route("api/compressions")]
-        public List<HuffmanCom> GetLCompress([FromForm] IFormFile file)
+        [Route("compressions")]
+        public List<HuffmanCom> GetListCompress()
         {
+            HuffmanCom.LoadHistList(Environment.ContentRootPath);
             return Storage.Instance.HistoryList;
         }
 
