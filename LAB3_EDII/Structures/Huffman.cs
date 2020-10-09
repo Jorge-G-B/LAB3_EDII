@@ -106,7 +106,7 @@ namespace CustomGenerics.Structures
 
             string savingText = Metadata + FinalText;
             var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
-            var writer = new StreamWriter(newFile);
+            var writer = new BinaryWriter(newFile);
             writer.Write(savingText);
             writer.Close();
             newFile.Close();
@@ -124,6 +124,7 @@ namespace CustomGenerics.Structures
             saver.Position = saver.Seek(0, SeekOrigin.Begin);
 
             //read first 2 bytes
+            buffer = reader.ReadBytes(1);
             buffer = reader.ReadBytes(2);
             int differentByteQty = buffer[0];
             int frequencyLength = buffer[1];
