@@ -85,7 +85,14 @@ namespace API.Controllers
         {
             try
             {
-                Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");                
+                Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
+                int i = 1;
+                var originalname = name;
+                while (System.IO.File.Exists($"{Environment.ContentRootPath}/{name}"))
+                {
+                    name = originalname + "(" + i.ToString() + ")";
+                    i++;
+                }
                 await Storage.Instance.HuffmanTree.CompressFile(Environment.ContentRootPath, file, name);
                 var HuffmanInfo = new HuffmanCom();
                 HuffmanInfo.SetAttributes(Environment.ContentRootPath, file.FileName, name);
