@@ -57,8 +57,8 @@ namespace API.Controllers
         [Route("decompress")]
         public async Task<IActionResult> PostDecompress([FromForm] IFormFile file)
         {
-            try
-            {
+            // try
+            // {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
                 HuffmanCom.LoadHistList(Environment.ContentRootPath);
                 var name = "";
@@ -71,11 +71,11 @@ namespace API.Controllers
                 }
                 await Storage.Instance.HuffmanTree.DecompressFile(file, name);
                 return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, ".txt"); 
-            }
-            catch
-            {
-                return StatusCode(500); 
-            }
+            // }
+            // catch
+            // {
+            //     return StatusCode(500); 
+            // }
         }
 
         // POST api/<HuffmanController>
@@ -83,8 +83,8 @@ namespace API.Controllers
         [Route("compress/{name}")]
         public async Task<IActionResult> PostHuffmanAsync([FromForm] IFormFile file, string name)
         {
-            try
-            {
+            // try
+            // {
                 Storage.Instance.HuffmanTree = new Huffman<HuffmanChar>($"{Environment.ContentRootPath}");
                 int i = 1;
                 var originalname = name;
@@ -99,11 +99,11 @@ namespace API.Controllers
                 Storage.Instance.HistoryList.Add(HuffmanInfo);
                 
                 return PhysicalFile($"{Environment.ContentRootPath}/{name}", MediaTypeNames.Text.Plain, $"{name}.huff");
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            // }
+            // catch
+            // {
+            //     return StatusCode(500);
+            // }
         }
     }
 }

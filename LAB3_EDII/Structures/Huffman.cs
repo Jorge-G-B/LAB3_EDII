@@ -78,46 +78,45 @@ namespace CustomGenerics.Structures
             SetCode(Root, "");
 
             //Ir leyendo el texto y transformarlo hacia el nuevo código.
-            string FinalText = "";
+            var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
+            var writer = new StreamWriter(newFile);
             string Metadata = "";
             Metadata += StringFromBytes((GetBytesFromInt(BytesDictionary.Values.Count, 1))); // Convertir este número a su representación en ascii
             int maxValue = BytesDictionary.Values.Max(x => x.Value.GetFrequency());
             var intBytes = ConvertToBinary(maxValue).Length / 8;
             Metadata += StringFromBytes((GetBytesFromInt(intBytes, 1)));
+            writer.Write(Metadata);
             foreach (var byteObject in BytesDictionary.Values)
             {
-                Metadata += (char)byteObject.Value.GetValue() + StringFromBytes((GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes)));
+                Metadata = (char)byteObject.Value.GetValue() + StringFromBytes((GetBytesFromInt(byteObject.Value.GetFrequency(), intBytes)));
+                writer.Write(Metadata);
             }
             //Aqui aún hace falta ir poniendo el byte y luego su frecuencia en binario.
 
             saver.Position = saver.Seek(0, SeekOrigin.Begin);
+            string FinalText = "";
             while (saver.Position != saver.Length)
             {
                 buffer = reader.ReadBytes(bufferSize);
                 foreach (var byteData in buffer)
                 {
                     FinalText += BytesDictionary[byteData].Code;
+                    if (FinalText.Length >= 8)
+                    {
+                        writer.Write((char)Convert.ToByte(FinalText.Substring(0, 8), 2));
+                        FinalText = FinalText.Remove(0, 8);
+                    }
                 }
             }
-            saver.Close();
-
-            while (FinalText.Length % 8 != 0)
+            if (FinalText.Length != 0)
             {
-                FinalText += "0";
+                while (FinalText.Length % 8 != 0)
+                {
+                    FinalText += "0";
+                }
+                writer.Write((char)Convert.ToByte(FinalText, 2));
             }
-
-            var stringBytes = (from Match m in Regex.Matches(FinalText, @"\d{8}") select m.Value).ToList();
-            FinalText = "";
-            byte[] bytes = new byte[1];
-            foreach (var byteData in stringBytes)
-            {   
-                FinalText += (char)Convert.ToByte(byteData, 2);
-            }   
-
-            string savingText = Metadata + FinalText;
-            var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
-            var writer = new StreamWriter(newFile);
-            writer.Write(savingText);
+            saver.Close();
             writer.Close();
             newFile.Close();
         }
@@ -162,13 +161,24 @@ namespace CustomGenerics.Structures
             var code = "";
             var finalText = "";
             int codeLength = 0;
-            while (finalText.Length != BytesCount)
+            if (System.IO.File.Exists($"{FilePath}/{name}"))
+            {
+                System.IO.File.Delete($"{FilePath}/{name}");
+            }
+            var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
+            var writer = new StreamWriter(newFile);
+            while (binaryText.Length > 8)
             {
                 foreach (var data in BytesDictionary.Values)
                 {
                     if (data.Code == code)
                     {
                         finalText += (char)BytesDictionary.First(x => x.Value.Code == code).Key;
+                        if (finalText.Length >= 8)
+                        {
+                            writer.Write(finalText.Substring(0, 8));
+                            finalText = finalText.Remove(0, 8);
+                        }
                         code = "";
                         binaryText = binaryText.Remove(0, codeLength);
                         codeLength = 0;
@@ -180,14 +190,6 @@ namespace CustomGenerics.Structures
                     code = binaryText.Substring(0, codeLength);
                 }
             }
-
-            if (System.IO.File.Exists($"{FilePath}/{name}"))
-            {
-                System.IO.File.Delete($"{FilePath}/{name}");
-            }
-            var newFile = new FileStream($"{FilePath}/{name}", FileMode.OpenOrCreate);
-            var writer = new StreamWriter(newFile);
-            writer.Write(finalText);
             writer.Close();
             newFile.Close();
         }
