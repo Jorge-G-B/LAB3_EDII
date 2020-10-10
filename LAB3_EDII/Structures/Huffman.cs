@@ -153,11 +153,11 @@ namespace CustomGenerics.Structures
                 text = text.Remove(0, frequencyLength + 1);
             }
 
+            saver.Close();
             BuildHuffmanTree();
             SetCode(Root, "");
             var binaryText = "";
             binaryText += ConvertFromBytesToBinary(ByteGenerator.ConvertToBytes(text));
-            saver.Close();
 
             var code = "";
             var finalText = "";
@@ -309,15 +309,6 @@ namespace CustomGenerics.Structures
             return finalText;
         }
 
-        private string FillZero(string text)
-        {
-            while (text.Length != 8)
-            {
-                text = "0" + text;
-            }
-            return text;
-        }
-
         private string ConvertToBinary(int number)
         {
             string value = Convert.ToString(number, 2);
@@ -383,9 +374,15 @@ namespace CustomGenerics.Structures
         private int GetIntFromBytesDecompression(byte[] array)
         {
             var result = "";
+            var character = "";
             for (int i = 0; i < array.Length; i++)
             {
-                result += Convert.ToString(array[i], 2);
+                character = Convert.ToString(array[i], 2);
+                while (character.Length != 8)
+                {
+                    character = "0" + character;
+                }
+                result += character;
             }
             return Convert.ToInt32(result, 2);
         }
