@@ -12,6 +12,14 @@ namespace CustomGenerics.Utilities
             return e.GetBytes(text);
         }
 
+        public static byte ConvertToByte(char character)
+        {
+            char[] convert = new char[1];
+            convert[0] = character;
+            var bytes = e.GetBytes(convert);
+            return bytes[0];
+        }
+
         public static string ConvertToString(byte[] bytes)
         {
             return e.GetString(bytes);
